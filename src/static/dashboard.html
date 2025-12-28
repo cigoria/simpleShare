@@ -61,13 +61,23 @@
         .progress-bar {
             width: 54%;
             height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: black;
+            transition: background-color 0.3s ease;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text);
             font-weight: bold;
             font-size: 18px;
-            transition: background-color 0.3s ease;
+            pointer-events: none;
+            transition: color 0.3s ease;
+        }
+
+        .progress-text.inverted {
+            color: var(--main);
         }
 
         .progress-bar.ok { background-color: var(--ok); }
@@ -83,7 +93,7 @@
         }
 
         th, td {
-            padding: 15px;
+            padding: 10px;
             text-align: left;
             border-bottom: 1px solid #444;
         }
@@ -124,7 +134,8 @@
             <button class="btn btn-invite" onclick="window.location.href='login.html#invite'">Invite</button>
         </div>
         <div class="progress-container">
-            <div class="progress-bar">54%</div>
+            <div class="progress-bar"></div>
+            <div class="progress-text">54%</div>
         </div>
     </div>
 
@@ -177,13 +188,21 @@
 </div>
 
 <script>
-    let storagePercentage = 54;
+    let storagePercentage = 51;
 
     function updateProgressBar() {
         const progressBar = document.querySelector('.progress-bar');
+        const progressText = document.querySelector('.progress-text');
         
-        progressBar.textContent = storagePercentage + '%';
+        progressText.textContent = storagePercentage + '%';
         progressBar.style.width = storagePercentage + '%';
+        
+        // Ha a szöveg a progress bar fölött van (50% után van a bar vége), invertálja a szöveget
+        if (storagePercentage > 50) {
+            progressText.classList.add('inverted');
+        } else {
+            progressText.classList.remove('inverted');
+        }
         
         progressBar.classList.remove('ok', 'warning', 'error');
         
