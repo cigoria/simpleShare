@@ -59,7 +59,6 @@
         }
 
         .progress-bar {
-            background-color: var(--ok);
             width: 54%;
             height: 100%;
             display: flex;
@@ -68,7 +67,12 @@
             color: black;
             font-weight: bold;
             font-size: 18px;
+            transition: background-color 0.3s ease;
         }
+
+        .progress-bar.ok { background-color: var(--ok); }
+        .progress-bar.warning { background-color: var(--danger); }
+        .progress-bar.error { background-color: var(--error); }
 
         table {
             width: 100%;
@@ -172,5 +176,27 @@
     </table>
 </div>
 
+<script>
+    let storagePercentage = 54;
+
+    function updateProgressBar() {
+        const progressBar = document.querySelector('.progress-bar');
+        
+        progressBar.textContent = storagePercentage + '%';
+        progressBar.style.width = storagePercentage + '%';
+        
+        progressBar.classList.remove('ok', 'warning', 'error');
+        
+        if (storagePercentage <= 75) {
+            progressBar.classList.add('ok');
+        } else if (storagePercentage <= 89) {
+            progressBar.classList.add('warning');
+        } else {
+            progressBar.classList.add('error');
+        }
+    }
+
+    updateProgressBar();
+</script>
 </body>
 </html>
