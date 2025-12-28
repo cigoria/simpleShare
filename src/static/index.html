@@ -2,12 +2,124 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>simpleShare</title>
+    <link rel="stylesheet" href="global.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            font-family: "Red Hat Mono", monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: black;
+            overflow: hidden;
+        }
+
+        .login-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: var(--primary-button);
+            color: black;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .input-box {
+            background-color: var(--input);
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2), inset 2px 2px 5px rgba(255,255,255,0.5);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .code-input {
+            background: transparent;
+            border: none;
+            outline: none;
+              font-family: "Inter", sans-serif;
+            font-size: 28px;
+            letter-spacing: 15px;
+            width: 200px;
+            text-align: center;
+            color: #333;
+        }
+
+        .download-btn {
+            background-color: var(--secondary-button);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 22px;
+            font-family: "Red Hat Mono", monospace;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .download-btn:hover {
+            opacity: 0.9;
+        }
+
+        .download-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
 </head>
 <body>
-<form action="">
-    <label for="input"></label><input type="text" name="code" id="input" maxlength="6" autocomplete="off" minlength="6">
-    <input type="submit" value="submit">
-</form>
+
+<button class="login-btn" onclick="window.location.href='login.html'">
+    LOG IN
+</button>
+    <div class="container">
+        <form id="downloadForm">
+            <div class="input-box">
+                <input
+                    type="text"
+                    class="code-input"
+                    id="codeInput"
+                    maxlength="6"
+                    pattern="[a-z]{6}"
+                    required
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+            </div>
+            <button type="submit" class="download-btn">Download</button>
+        </form>
+    </div>
+
+    <script>
+        const input = document.getElementById('codeInput');
+        const form = document.getElementById('downloadForm');
+
+        input.addEventListener('input', () => {
+            input.value = input.value.toLowerCase().replace(/[^a-z]/g, '');
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value.length === 6) {
+                alert('Success! Your download is starting...');
+            } else {
+                alert('Error: Please enter exactly 6 lowercase letters.');
+            }
+        });
+    </script>
+
 </body>
 </html>
