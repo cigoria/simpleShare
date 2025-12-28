@@ -1,7 +1,6 @@
 # Dependencies
 node_modules/
 package-lock.json
-# Ha yarn-t használsz:
 # yarn.lock
 # .pnp.js
 
@@ -11,7 +10,7 @@ build/
 .next/
 out/
 
-# Environment variables (SOHA ne commitold ezeket!)
+# Environment variables
 .env
 .env.local
 .env.development.local
@@ -19,11 +18,7 @@ out/
 .env.production.local
 *.env.bak
 
-# Generated icons (A kérésednek megfelelően ezeket NEM ignoráljuk, csak a mintát tartjuk meg)
-# favicon-*.png
-# icon-*.png
-# apple-touch-icon.png
-# favicon.ico
+
 
 # Firebase
 .firebase/
@@ -40,7 +35,7 @@ coverage/
 
 # IDE & Editors
 .vscode/
-!.vscode/extensions.json  # Ezt néha érdemes megtartani a csapatnak
+!.vscode/extensions.json  
 .idea/
 *.swp
 *.swo
