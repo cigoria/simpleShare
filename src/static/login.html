@@ -95,7 +95,7 @@
         const password = passInp.value;
 
         if (!username || !password) {
-            alert("Töltsd ki a mezőket!");
+            alert("Fill in the fields!");
             return;
         }
 
@@ -107,7 +107,7 @@
                 pass: hashedPassword
             };
             localStorage.setItem('storedUser', JSON.stringify(userData));
-            alert("Sikeres regisztráció");
+            alert("Successful registration");
             window.location.hash = '';
         } else {
             const rawData = localStorage.getItem('storedUser');
@@ -116,7 +116,7 @@
             if (storedData.user === username && storedData.pass === hashedPassword) {
                 window.location.href = "dashboard.html";
             } else {
-                alert("Hibás felhasználónév vagy jelszó!");
+                alert("Incorrect username or password!");
             }
         }
     });
