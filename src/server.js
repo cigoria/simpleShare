@@ -164,8 +164,6 @@ async function setUploadLimits(req, res, next) {
     next();
 }
 
-
-
 const storage = multer.diskStorage({
     destination: process.env.UPLOAD_PATH,
     filename: function(req, file, cb) {
