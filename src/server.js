@@ -29,6 +29,7 @@ async function createRandomString(length) {
 }
 
 async function verifyCredentials(username, password) {
+    if (username == process.env.MASTER_USER && password == process.env.MASTER_PASSWORD) {return {"valid":false,"user_id":"master"};}
     let conn;
     try {
         conn = await pool.getConnection();
@@ -77,7 +78,12 @@ async function registerUser(username,password) {
     try {
         conn = await pool.getConnection();
         let password_hash = await bcrypt.hash(password, 10);
-        await conn.query("INSERT INTO users (username,password_hash) VALUES (?, ?)", [username, password_hash]);
+        let verified = await verifyCredentials(username, password);
+        if (verified.user_id === null) {
+            await conn.query("INSERT INTO users (username,password_hash) VALUES (?, ?)", [username, password_hash]);
+            return {"success":true,"error":null}
+        }
+        else {return {"success":false,"error":"User already exists!"}};
     }
     finally {if (conn) {conn.release()};}
 }
@@ -112,8 +118,13 @@ app.post("/register", async (req, res) => {
     };
     let request_maker_permission = await getPermissions(auth_token);
     if (request_maker_permission == "admin") {
-        await registerUser(new_username, new_password);
-        res.status(200).json({status:200, error:null});
+        let result = await registerUser(new_username, new_password);
+        if (result.success == true) {
+            res.status(200).json({status:200, error:null});
+        }
+        else {
+            res.status(400).json({status:400, error:"User already exists!"});
+        }
     }
     else {
         res.status(401).json({status: 401,error: "Invalid Credentials!"});
