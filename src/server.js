@@ -4,6 +4,8 @@ const os = require("os");
 require('dotenv').config();
 const mariadb = require("mariadb");
 const bcrypt = require('bcrypt');
+const multer = require("multer");
+const path = require("path");
 
 console.log(process.env.DB_HOST);
 const pool = mariadb.createPool({
@@ -20,7 +22,6 @@ app.use(express.static(path.join(__dirname, "./static")));
 
 
 async function verifyCredentials(username, password) {
-    if (username == process.env.MASTER_USER && password == process.env.MASTER_PASSWORD) {return {"valid":false,"user_id":"master"};}
     let conn;
     try {
         conn = await pool.getConnection();
@@ -83,6 +84,107 @@ async function registerUser(username,password) {
     finally {if (conn) {conn.release()};}
 }
 
+async function validateToken(token) {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        let res = await conn.query("SELECT * FROM session_tokens WHERE token = ?", [token]);
+        if (res.length > 0) {
+            if (res[0].is_valid == 1) {
+                let res2 = conn.query("SELECT * FROM users WHERE id = ?", [res[0].user_id]);
+                if (res.length > 0){
+                    return res[0].user_id;
+                }
+                else {return false}
+            }
+            else {
+                return false
+            }
+        }
+        else {
+            return false
+        }
+    }
+    finally {if (conn) {conn.release();}};
+}
+
+async function generateUniqueFileID(code_length){
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const chars = "abcdefghijklmnopqrstuvwxyz";
+        while (true) {
+            let result = "";
+            for (let i = 0; i < code_length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            let res = await conn.query("SELECT * FROM file_index WHERE id = ?", [result])
+            if (res.length == 0) {
+                return result
+            }
+        }
+    }
+    finally {if (conn) {conn.release();}};
+}
+
+async function calculateRemainFromQuota(session_token){
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        let validation_res = await validateToken(session_token);
+        if (validation_res != false) {
+            let quota = conn.query("SELECT * FROM users WHERE id = ?",[validation_res])[0].quota_in_bytes;
+            if (quota == 0) {
+                return null
+            };
+            let used_up = conn.query("SELECT SUM(file_size_in_bytes) AS total_used FROM file_index WHERE user_id = ?", [validation_res]);
+            return quota-used_up;
+        }
+        else {
+            return 0
+        }
+
+    }
+    finally {if (conn) {conn.release();}};
+}
+
+async function authenticateUser(req, res, next) {
+    const auth = req.headers.authorization;
+    if (!auth) return res.sendStatus(401);
+    let auth_result = await validateToken(auth);
+    if (auth_result == false) {
+        res.sendStatus(401);
+    }
+
+    next();
+}
+
+async function setUploadLimits(req, res, next) {
+    req.maxUploadSize = await calculateRemainFromQuota(req.headers.authorization);
+    next();
+}
+
+
+
+const storage = multer.diskStorage({
+    destination: process.env.UPLOAD_PATH,
+    filename: function(req, file, cb) {
+        const code = generateUniqueFileID(6);
+        const ext = path.extname(file.originalname);
+
+        const filename = `${code}${ext}`;
+        cb(null, filename);
+    }
+});
+
+const upload = (req, res, next) => {
+    multer({
+        storage,
+        limits: { fileSize: req.maxUploadSize }
+    }).single("file")(req, res, next);
+};
+
+
 app.get("/login", async (req, res) => {
     res.sendFile(path.join(__dirname, "./static/login.html"));
 })
@@ -125,11 +227,17 @@ app.post("/register", async (req, res) => {
         res.status(401).json({status: 401,error: "Invalid Credentials!"});
     }
 })
-
 app.use("/", (req, res, next) => {
     res.sendFile(path.join(__dirname, "./static/index.html"));
 });
 
+
+
+
+
+
+
+// Generic
 function getIPv4Addresses() {
     const interfaces = os.networkInterfaces();
     const addresses = [];
