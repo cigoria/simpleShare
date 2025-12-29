@@ -235,12 +235,10 @@ app.post("/login", async (req, res) => {
   let password = req.body.password;
 
   if (!username || !password) {
-    res
-      .status(400)
-      .json({
-        status: 400,
-        error: "Username and password is required for autentication!",
-      });
+    res.status(400).json({
+      status: 400,
+      error: "Username and password is required for autentication!",
+    });
   }
 
   let verification_result = await verifyCredentials(username, password);
