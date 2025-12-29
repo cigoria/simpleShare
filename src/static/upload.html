@@ -1,97 +1,98 @@
-
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>simpleShare - Upload</title>
-    <link rel="stylesheet" href="global.css">
+    <link rel="stylesheet" href="global.css" />
     <style>
-        body{
-              font-family: "Inter", sans-serif;
-            font-size: 3em;
-            color:var(--text);
-            background-color:var(--bg);
-            margin: 0;
-
-        }
-        .drop_zone{
-            position: page;
-            height: calc(100vh - 200px);
-            width: calc(100vw - 200px);
-            background-color: var(--main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin:100px auto;
-            border-radius: 28px;
-            border: 3px solid #a1a1a1;
-            transition: .1s;
-        }
-        .drop_zone:hover{
-            background-color: #363636;
-            transition: .1s;
-        }
-        p{
-            display: inline-block;
-            user-select: none;
-        }
-        .dragover{
-            background-color: hsla(138, 91%, 67%, 0.23);
-            border-color: hsla(138, 91%, 67%, 0.85);
-            filter: drop-shadow(0px 0px 100px hsla(138, 91%, 67%, 0.50));
-            transition: .2s;
-        }
-        .select{
-            background-color: hsla(226, 85%, 62%, 0.23);
-            border-color: hsla(226, 85%, 62%, 0.85);
-            filter: drop-shadow(0px 0px 100px hsla(226, 85%, 62%, 0.5));
-            transition: .2s;
-        }
+      body {
+        font-family: "Inter", sans-serif;
+        font-size: 3em;
+        color: var(--text);
+        background-color: var(--bg);
+        margin: 0;
+      }
+      .drop_zone {
+        position: page;
+        height: calc(100vh - 200px);
+        width: calc(100vw - 200px);
+        background-color: var(--main);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 100px auto;
+        border-radius: 28px;
+        border: 3px solid #a1a1a1;
+        transition: 0.1s;
+      }
+      .drop_zone:hover {
+        background-color: #363636;
+        transition: 0.1s;
+      }
+      p {
+        display: inline-block;
+        user-select: none;
+      }
+      .dragover {
+        background-color: hsla(138, 91%, 67%, 0.23);
+        border-color: hsla(138, 91%, 67%, 0.85);
+        filter: drop-shadow(0px 0px 100px hsla(138, 91%, 67%, 0.5));
+        transition: 0.2s;
+      }
+      .select {
+        background-color: hsla(226, 85%, 62%, 0.23);
+        border-color: hsla(226, 85%, 62%, 0.85);
+        filter: drop-shadow(0px 0px 100px hsla(226, 85%, 62%, 0.5));
+        transition: 0.2s;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="drop_zone" id="drop_zone">
-        <p><span  style="color:#5EF78C">Drop</span> or <span style="color:#4C73F0">Select</span> files here</p>
+      <p>
+        <span style="color: #5ef78c">Drop</span> or
+        <span style="color: #4c73f0">Select</span> files here
+      </p>
     </div>
-</body>
-    <script>
-        var dropZone = document.getElementById('drop_zone');
+  </body>
+  <script>
+    var dropZone = document.getElementById("drop_zone");
 
-        dropZone.addEventListener('dragover', (event) => {
-            event.preventDefault();
-            dropZone.classList.add('dragover');
-        });
+    dropZone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      dropZone.classList.add("dragover");
+    });
 
-        dropZone.addEventListener('dragleave', (event) => {
-            event.preventDefault();
-            dropZone.classList.remove('dragover');
-        });
+    dropZone.addEventListener("dragleave", (event) => {
+      event.preventDefault();
+      dropZone.classList.remove("dragover");
+    });
 
-        dropZone.addEventListener('drop', (event) => {
-            event.preventDefault();
-            dropZone.classList.remove('dragover');
-            let files = event.dataTransfer.files;
-            handleFiles(files);
-        });
-        dropZone.addEventListener('click', (event) => {
-            event.preventDefault();
-            dropZone.classList.add('select');
-            var input = document.createElement('input');
-            input.type = 'file';
-            input.onchange = e => {
-                let files = e.target.files;
-                handleFiles(files)
-                dropZone.classList.remove('select');
-            }
-            input.oncancel= event => {
-                dropZone.classList.remove('select');
-            }
-            input.click();
-        })
+    dropZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      dropZone.classList.remove("dragover");
+      let files = event.dataTransfer.files;
+      handleFiles(files);
+    });
+    dropZone.addEventListener("click", (event) => {
+      event.preventDefault();
+      dropZone.classList.add("select");
+      var input = document.createElement("input");
+      input.type = "file";
+      input.onchange = (e) => {
+        let files = e.target.files;
+        handleFiles(files);
+        dropZone.classList.remove("select");
+      };
+      input.oncancel = (event) => {
+        dropZone.classList.remove("select");
+      };
+      input.click();
+    });
 
-        function handleFiles(files) {
-            console.log(files);
-        }
-    </script>
+    function handleFiles(files) {
+      console.log(files);
+    }
+  </script>
 </html>
