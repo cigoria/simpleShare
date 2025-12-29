@@ -5,6 +5,7 @@ require("dotenv").config();
 const mariadb = require("mariadb");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
+const PORT = process.env.PORT || 3000;
 
 console.log(process.env.DB_HOST);
 const pool = mariadb.createPool({
@@ -288,13 +289,12 @@ function getIPv4Addresses() {
   return addresses;
 }
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
   console.log("Server is Running");
-  console.log(`http://localhost:${process.env.PORT || 3000}`);
+  console.log(`http://localhost:${PORT}`);
 
   const ipAddresses = getIPv4Addresses();
   ipAddresses.forEach((ip) => {
-    console.log();
-    console.log(`http://${ip}:${process.env.PORT || 3000}`);
+    console.log(`http://${ip}:${PORT}`);
   });
 });
