@@ -1,53 +1,49 @@
-name: Prettier auto PR
+name: Prettier Bot
 
 on:
   push:
     branches:
       - dev
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
-  prettier-pr:
+  prettier-bot:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
-      - name: Checkout dev
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Node
+      - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 20
 
       - name: Install deps
-        run: |
-          npm ci || npm install
+        run: npm ci
 
-      - name: Switch to / update prettier branch
+      - name: Checkout prettier branch
         run: |
-          git fetch origin
-          if git show-ref --verify --quiet refs/heads/prettier; then
-            git checkout prettier
-          else
-            git checkout -b prettier
-          fi
-          git merge origin/dev --no-edit || true
+          git fetch origin prettier || true
+          git checkout -B prettier origin/prettier || git checkout -B prettier
+
+      - name: Merge dev -> prettier
+        run: |
+          git pull origin dev --no-rebase
 
       - name: Run Prettier
         run: |
           npx prettier . --write
 
-      - name: Commit changes if any
+      - name: Stage everything EXCEPT workflows
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git diff --cached --quiet || git commit -m "chore: prettier format"
+          git add . ':!**/.github/workflows/*'
+          git commit -m "Prettier auto-format" || echo "No formatting changes 🎉"
 
       - name: Push prettier branch
         run: |
@@ -60,5 +56,4 @@ jobs:
           base: dev
           head: prettier
           title: "Prettier formatting update"
-          body: "Automatikus formázás a dev branch alapján 🚀"
-          branch: prettier
+          body: "Automatikus Prettier formázás a dev branch alapján."
