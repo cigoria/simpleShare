@@ -1,0 +1,67 @@
+name: Prettier Bot
+
+on:
+  push:
+    branches:
+      - dev
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run-prettier:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          npm ci || npm install
+
+      - name: Create / update prettier branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if git show-ref --quiet refs/heads/prettier; then
+            git checkout prettier
+            git merge dev --no-edit
+          else
+            git checkout -b prettier
+          fi
+
+      - name: Run Prettier
+        run: |
+          npx prettier . --write
+
+      - name: Commit changes if any
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "style: apply prettier formatting"
+            git push origin prettier
+          else
+            echo "No formatting changes."
+          fi
+
+      - name: Create or update PR to dev
+        uses: peter-evans/create-pull-request@v6
+        with:
+          source: prettier
+          target: dev
+          title: "Prettier formatting sync"
+          body: "Automatikus Prettier futtatás a dev branch alapján."
+          branch: prettier
+          commit-message: "style: prettier auto-format"
+          labels: formatting
