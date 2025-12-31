@@ -5,37 +5,32 @@ on:
     branches:
       - dev
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   run-prettier:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
-      - name: Checkout dev
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: dev
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: |
-          npm ci || npm install
+      - name: Install deps
+        run: npm ci || npm install
 
-      - name: Create / reset prettier branch from dev
+      - name: Setup git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
           git fetch origin
-
           if git show-ref --quiet refs/heads/prettier; then
             git checkout prettier
             git reset --hard origin/dev
@@ -44,10 +39,9 @@ jobs:
           fi
 
       - name: Run Prettier
-        run: |
-          npx prettier . --write
+        run: npx prettier . --write
 
-      - name: Commit changes if any
+      - name: Commit & Push
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             git add .
@@ -57,13 +51,12 @@ jobs:
             echo "No formatting changes."
           fi
 
-      - name: Create or update PR to dev
+      - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          source: prettier
-          target: dev
-          title: "Prettier formatting sync"
-          body: "Automatikus Prettier futtatás a dev branch alapján."
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: prettier
-          commit-message: "style: prettier auto-format"
+          base: dev
+          title: Prettier formatting sync
+          body: Automatikus Prettier futtatás a dev branch alapján.
           labels: formatting
