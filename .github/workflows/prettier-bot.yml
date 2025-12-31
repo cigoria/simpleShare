@@ -1,62 +1,64 @@
-name: Prettier Bot
+name: Prettier auto PR
 
 on:
   push:
     branches:
       - dev
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
-  run-prettier:
+  prettier-pr:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-      pull-requests: write
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout dev
+        uses: actions/checkout@v4
         with:
-          ref: dev
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '18'
 
       - name: Install deps
-        run: npm ci || npm install
+        run: |
+          npm ci || npm install
 
-      - name: Setup git
+      - name: Switch to / update prettier branch
+        run: |
+          git fetch origin
+          if git show-ref --verify --quiet refs/heads/prettier; then
+            git checkout prettier
+          else
+            git checkout -b prettier
+          fi
+          git merge origin/dev --no-edit || true
+
+      - name: Run Prettier
+        run: |
+          npx prettier . --write
+
+      - name: Commit changes if any
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin
-          if git show-ref --quiet refs/heads/prettier; then
-            git checkout prettier
-            git reset --hard origin/dev
-          else
-            git checkout -b prettier origin/dev
-          fi
+          git add .
+          git diff --cached --quiet || git commit -m "chore: prettier format"
 
-      - name: Run Prettier
-        run: npx prettier . --write
-
-      - name: Commit & Push
+      - name: Push prettier branch
         run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            git add .
-            git commit -m "style: apply prettier formatting"
-            git push origin prettier --force-with-lease
-          else
-            echo "No formatting changes."
-          fi
+          git push origin prettier
 
-      - name: Create Pull Request
+      - name: Create / update PR
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: prettier
           base: dev
-          title: Prettier formatting sync
-          body: Automatikus Prettier futtatás a dev branch alapján.
-          labels: formatting
+          head: prettier
+          title: "Prettier formatting update"
+          body: "Automatikus formázás a dev branch alapján 🚀"
+          branch: prettier
