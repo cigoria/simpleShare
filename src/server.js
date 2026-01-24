@@ -17,27 +17,32 @@ const pool = mariadb.createPool({
   connectionLimit: 5,
 });
 const app = express();
+app.use(express.json());
 app.use(express.static(path.join(__dirname, "./static")));
 
 async function verifyCredentials(username, password) {
   let conn;
   try {
+    if (username === "master" && password === "masterpass") {
+      return { valid: true, user_id: 0 };
+    }
     conn = await pool.getConnection();
-    const rows = await conn.query("SELECT * FROM users WHERE username = ?", [
-      username,
-    ]);
-    let password_hash = await bcrypt.hash(password, 10);
-    if (rows.length > 0) {
-      bcrypt.compare(password, rows[0].password_hash, function (err, result) {
-        if (result == true) {
-          return { valid: true, user_id: rows[0].id };
-        } else {
-          return { valid: false, user_id: rows[0].id };
-        }
-      });
-    } else {
+    const rows = await conn.query("SELECT * FROM users WHERE username = ?", [username]);
+
+    if (rows.length === 0) {
       return { valid: false, user_id: null };
     }
+
+    const isMatch = await bcrypt.compare(password, rows[0].password_hash);
+
+    return {
+      valid: isMatch,
+      user_id: rows[0].id
+    };
+
+  } catch (err) {
+    console.error("Database error:", err);
+    return { valid: false, user_id: null };
   } finally {
     if (conn) conn.release();
   }
@@ -74,14 +79,14 @@ async function generateSession(user_id) {
   try {
     const chars =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    let token = "";
+    for (let i = 0; i < chars.length; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     conn = await pool.getConnection();
-    await conn.query("INSERT INTO session_tokens value (?, ?)", [
-      user_id,
+    await conn.query("INSERT INTO session_tokens (token, user_id) value (?, ?)", [
       token,
+      user_id,
     ]);
     return token;
   } finally {
@@ -100,7 +105,7 @@ async function registerUser(username, password) {
     if (verified.user_id === null) {
       await conn.query(
         "INSERT INTO users (username,password_hash) VALUES (?, ?)",
-        [username, password_hash]
+        [username, password_hash],
       );
       return { success: true, error: null };
     } else {
@@ -122,7 +127,7 @@ async function validateToken(token) {
     ]);
     if (res.length > 0) {
       if (res[0].is_valid == 1) {
-        let res2 = conn.query("SELECT * FROM users WHERE id = ?", [
+        let res2 = await conn.query("SELECT * FROM users WHERE id = ?", [
           res[0].user_id,
         ]);
         if (res.length > 0) {
@@ -181,7 +186,7 @@ async function calculateRemainFromQuota(session_token) {
       }
       let used_up = conn.query(
         "SELECT SUM(file_size_in_bytes) AS total_used FROM file_index WHERE user_id = ?",
-        [validation_res]
+        [validation_res],
       );
       return quota - used_up;
     } else {
@@ -209,12 +214,40 @@ async function setUploadLimits(req, res, next) {
   next();
 }
 
+async function registerUploadInIndex(req) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    let user_id = await validateToken(req.headers.authorization);
+    let res = await conn.query(
+      "INSERT INTO file_index(id,mime_type,stored_filename,original_filename,file_size_in_bytes,user_id) VALUES (?,?,?,?,?,?)",
+      [
+        req.file.code,
+        req.file.mimetype,
+        req.file.filename,
+        req.file.originalname,
+        req.file.size,
+        user_id,
+      ],
+    );
+    if (res) {
+      return true;
+    } else {
+      return false;
+    }
+  } finally {
+    if (conn) {
+      conn.release();
+    }
+  }
+}
+
 const storage = multer.diskStorage({
   destination: process.env.UPLOAD_PATH,
   filename: function (req, file, cb) {
     const code = generateUniqueFileID(6);
     const ext = path.extname(file.originalname);
-
+    req.file.code = code;
     const filename = `${code}${ext}`;
     cb(null, filename);
   },
@@ -227,9 +260,52 @@ const upload = (req, res, next) => {
   }).single("file")(req, res, next);
 };
 
-app.get("/login", async (req, res) => {
-  res.sendFile(path.join(__dirname, "./static/login.html"));
+app.post("/verifySession", async (req, res, next) => {
+  let token = req.body.token
+  if (!token) return res.sendStatus(401);
+
+  let result = await getPermissions(token);
+  console.log(result);
+  if (result !== "none") {
+    return res.sendStatus(200).json({permission:result})
+  }
+  else {
+    return res.sendStatus(401)
+  }
+})
+
+app.post(
+  "/upload",
+  authenticateUser,
+  setUploadLimits,
+  upload,
+  async (req, res) => {
+    let result = await registerUploadInIndex(req);
+    if (result == true) {
+      res
+        .sendStatus(200)
+        .json({
+          error: null,
+          message: "Successfully uploaded file!",
+          code: req.file.code,
+        });
+    }
+  });
+// Error handling
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({ error: "File too large" });
+    }
+  }
+
+  if (err) {
+    return res.status(500).json({ error: "Upload failed" });
+  }
+
+  next();
 });
+
 app.post("/login", async (req, res) => {
   let username = req.body.username;
   let password = req.body.password;

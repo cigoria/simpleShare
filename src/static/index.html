@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>simpleShare</title>
     <link rel="stylesheet" href="global.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons&family=Material+Icons+Outlined&family=Material+Icons+Round&family=Material+Icons+Sharp&family=Material+Icons+Two+Tone" rel="stylesheet" />
     <style>
       body {
         margin: 0;
@@ -15,14 +16,13 @@
         justify-content: center;
         align-items: center;
         height: 100vh;
-        color: black;
+        color: white;
         overflow: hidden;
       }
-
+      .white {
+        color: white;
+      }
       .login-btn {
-        position: absolute;
-        top: 20px;
-        right: 20px;
         background-color: var(--primary-button);
         color: black;
         border: none;
@@ -31,6 +31,20 @@
         font-size: 18px;
         cursor: pointer;
         letter-spacing: 1px;
+        margin: 10px;
+      }
+      .upload-btn {
+        height: 42px;
+        background-color: var(--primary-button);
+        color: black;
+        border: none;
+        padding: 10px 10px;
+        border-radius: 8px;
+        font-size: 18px;
+        cursor: pointer;
+        letter-spacing: 1px;
+        text-align: center;
+        margin: 10px;
       }
 
       .container {
@@ -88,12 +102,214 @@
       .download-btn:active {
         transform: scale(0.95);
       }
+      .login-box {
+        background-color: hsla(0, 0%, 12%, 0.6);
+        position: absolute;
+        height: calc(100vh - 20vh);
+        width: calc(100vw - 30vw);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 100px auto;
+        border-radius: 28px;
+        border: 3px solid #a1a1a1;
+        transition: 0.1s;
+        backdrop-filter: blur(20px);
+      }
+      .upload-box {
+        background-color: hsla(0, 0%, 12%, 0.6);
+        position: absolute;
+        height: calc(100vh - 20vh);
+        width: calc(100vw - 30vw);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 100px auto;
+        border-radius: 28px;
+        border: 3px solid #a1a1a1;
+        transition: 0.1s;
+        backdrop-filter: blur(20px);
+      }
+      .close-btn {
+        position: absolute;
+        top: 20px;
+        height: 42px;
+        right: 20px;
+        background-color: var(--primary-button);
+        color: black;
+        border: none;
+        padding: 10px 10px;
+        border-radius: 8px;
+        font-size: 18px;
+        cursor: pointer;
+        letter-spacing: 1px;
+        text-align: center;
+      }
+      .menu-btn {
+        height: 42px;
+        background-color: var(--primary-button);
+        color: black;
+        border: none;
+        padding: 10px 10px;
+        border-radius: 8px;
+        font-size: 18px;
+        cursor: pointer;
+        letter-spacing: 1px;
+        text-align: center;
+        margin: 10px;
+      }
+
+      .form-input {
+        min-width: 300px;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 20px;
+        border: none;
+        outline: none;
+        font-size: 20px;
+        background: var(--input);
+        font-family: "Red Hat Mono", monospace;
+      }
+      .submit-button {
+        min-width: 300px;
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 20px;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        background: var(--primary-button);
+        font-family: "Red Hat Mono", monospace;
+        transition: background 0.3s;
+      }
+      .submit-button.invite-mode {
+        background: var(--secondary-button);
+      }
+
+      .submit-button:hover {
+        opacity: 0.9;
+      }
+      #loginForm {
+        display: flex;
+        flex-direction: column;
+      }
+      #login-error-label {
+        font-family: "Red Hat Mono", monospace;
+        color: var(--error);
+      }
+      .button-container {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        justify-content: right;
+        align-items: flex-end;
+        flex-direction: row-reverse;
+      }
+      .drop_zone {
+        font-family: "Inter", sans-serif;
+        font-size: 2em;
+        position: page;
+        height: 80%;
+        width: 80%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 100px auto;
+        border-radius: 28px;
+        border: 0px solid #a1a1a1;
+        transition: 0.1s;
+      }
+      .drop_zone:hover {
+        background-color: hsla(0, 0%, 21%, 0.5);
+        transition: 0.1s;
+      }
+      p {
+        display: inline-block;
+        user-select: none;
+      }
+      .dragover {
+        background-color: hsla(138, 91%, 67%, 0.23);
+        border-color: hsla(138, 91%, 67%, 0.85);
+        filter: drop-shadow(0px 0px 100px hsla(138, 91%, 67%, 0.8));
+        transition: 0.2s;
+      }
+      .select {
+        background-color: hsla(226, 85%, 62%, 0.23);
+        border-color: hsla(226, 85%, 62%, 0.85);
+        filter: drop-shadow(0px 0px 100px hsla(226, 85%, 62%, 0.8));
+        transition: 0.2s;
+      }
+      #logo{
+        position: absolute;
+        padding: 0px;
+        margin: 0px;
+        top: 20px;
+        left: 20px;
+        font-family: "Inter", sans-serif;
+        font-weight: normal;
+      }
+      #highlighted{
+        background: -webkit-linear-gradient(var(--primary-button), var(--secondary-button));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      #hamburber-menu {
+        position: absolute;
+        top: 90px;
+        right: 20px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: hsl(0, 0%, 12%);
+        border-radius: 8px;
+        border: 1px solid #a1a1a1;
+        transition: 0.2s;
+        backdrop-filter: blur(20px);
+      }
+      .burber-item{
+        height: 42px;
+        width: 200px;
+        background: rgba(55, 55, 55, 0.66);
+        border-radius: 8px;
+        border: 1px solid #a1a1a1;
+        text-align: left;
+        justify-content: center;
+        align-items: center;
+        vertical-align: middle;
+        margin: 2px;
+        display: flex;
+        flex-direction: row;
+        font-family: "Inter", sans-serif;
+      }
+      .burber-item:hover{
+        background-color: rgba(80, 80, 80, 0.7);
+      }
+      #logout-menu-item{
+        border-color: var(--error);
+        background: hsla(11, 91%, 67%, 0.5);
+      }
+      #logout-menu-item:hover{
+        background-color: hsla(11, 91%, 67%, 0.45);
+        filter: drop-shadow(0px 0px 10px hsla(11, 91%, 67%, 0.8));
+      }
+      hr {
+        width: 100%;
+      }
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
-    <button class="login-btn" onclick="window.location.href = 'login.html'">
-      LOG IN
-    </button>
+  <h1 id="logo">simple<span id="highlighted">Share</span></h1>
+    <div class="button-container">
+      <button class="menu-btn hidden"><span class="material-icons-outlined">menu</span></button>
+      <button class="login-btn" onclick=document.getElementById("login-box").classList.remove("hidden")>LOG IN</button>
+      <button class="upload-btn hidden" onclick=document.getElementById("upload-box").classList.remove("hidden")><span class="material-icons-outlined">upload</span></button>
+    </div>
     <div class="container">
       <form id="downloadForm">
         <div class="input-box">
@@ -150,7 +366,59 @@
       </form>
     </div>
 
+    <div class="upload-box hidden" id="upload-box">
+      <button class="close-btn" onclick=document.getElementById("upload-box").classList.add("hidden");><span class="material-icons-outlined">close</span></button>
+      <div class="drop_zone" id="drop_zone">
+        <p>
+          <span style="color: #5ef78c">Drop</span> or
+          <span style="color: #4c73f0">Select</span> files here
+        </p>
+      </div>
+    </div>
+
+    <div id="hamburber-menu">
+      <div class="burber-item hidden">Admin dashboard</div>
+      <div class="burber-item"><span class="material-icons-outlined">files</span> My files</div>
+      <div class="burber-item"><span class="material-icons-outlined">password</span> Change password</div>
+      <hr>
+      <div class="burber-item" id="logout-menu-item"><span class="material-icons-outlined">logout</span>Logout</div>
+    </div>
+
+    <div class="login-box hidden" id="login-box">
+      <button class="close-btn" onclick=document.getElementById("login-box").classList.add("hidden");><span class="material-icons-outlined">close</span></button>
+      <form id="loginForm">
+        <input type="text" id="username" name="username" aria-label="Username" placeholder="Username" class="form-input" required> <br>
+        <input type="password" id="password" name="password" aria-label="Password" placeholder="Password" class="form-input" required> <br>
+        <button type="submit" class="submit-button" id="action-button">Login</button>
+        <label id="login-error-label"></label>
+      </form>
+    </div>
+
     <script>
+      // Try to login with session token
+      const sessionToken = localStorage.getItem("token");
+      if (sessionToken) {
+        fetch("/verifySession", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=UTF-8"
+          },
+          body: JSON.stringify({ token: sessionToken })
+        })
+                .then(response => {
+                  if (!response.ok) {
+                    throw new Error("Session invalid");
+                  }
+                  else {
+                    document.getElementsByClassName("login-btn")[0].classList.add("hidden");
+                    document.getElementsByClassName("menu-btn")[0].classList.remove("hidden");
+                    document.getElementsByClassName("upload-btn")[0].classList.remove("hidden");
+                  }
+                  return response.body
+                })
+      }
+
+      // Sets up the download input logic
       const inputs = document.querySelectorAll(".code-input");
       const form = document.getElementById("downloadForm");
 
@@ -183,6 +451,91 @@
           alert("Error: Please enter exactly 6 lowercase letters.");
         }
       });
+
+      // Upload section
+      let dropZone = document.getElementById("drop_zone");
+
+      dropZone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        dropZone.classList.add("dragover");
+      });
+
+      dropZone.addEventListener("dragleave", (event) => {
+        event.preventDefault();
+        dropZone.classList.remove("dragover");
+      });
+
+      dropZone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        dropZone.classList.remove("dragover");
+        let files = event.dataTransfer.files;
+        handleFiles(files);
+      });
+      dropZone.addEventListener("click", (event) => {
+        event.preventDefault();
+        dropZone.classList.add("select");
+        let input = document.createElement("input");
+        input.type = "file";
+        input.onchange = (e) => {
+          let files = e.target.files;
+          handleFiles(files);
+          dropZone.classList.remove("select");
+        };
+        input.oncancel = (event) => {
+          dropZone.classList.remove("select");
+        };
+        input.click();
+      });
+
+      async function handleFiles(files) {
+        const formData = new FormData();
+        formData.append("file", files[0]);
+
+        const response = await fetch("/upload", {
+          method: "POST",
+          headers: {
+            Authorization: `${localStorage.getItem("token")}`,
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("Upload failed:", error.error);
+          return;
+        }
+
+        const result = await response.json();
+        console.log("Stored as:", result.storedAs);
+
+      }
+
+      // Login and store session token
+      document.getElementById("loginForm").addEventListener("submit", async function(e) {
+        e.preventDefault(); // This stops the page from refreshing!
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+          const response = await fetch("/login", {
+            method: "POST",
+            body: JSON.stringify({ username:username, password:password }),
+            headers: { "Content-type": "application/json; charset=UTF-8" }
+          });
+          const json = await response.json();
+          if (response.status === 200) {
+            localStorage.setItem("token", json.token);
+            location.reload();
+          }
+          if (response.status === 401) {
+              document.getElementById("login-error-label").innerText = "Login Failed! Invalid Credentials";
+          }
+        } catch (err) {
+          console.error("Fetch error:", err);
+        }
+      });
+
     </script>
   </body>
 </html>
