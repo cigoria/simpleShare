@@ -250,6 +250,20 @@ async function authenticateUser(req, res, next) {
   next();
 }
 
+async function retrieveFileInfo(file_code) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    let result = await conn.query("SELECT * FROM file_index WHERE id = ?", [file_code])
+    if (result.length === 0) {return null}
+    if (result.length > 1) {return null}
+    else {return result[0]}
+  }
+  finally {
+    if (conn) {conn.release();}
+  }
+}
+
 async function registerUploadInIndex(req) {
   let conn;
   try {
@@ -301,6 +315,23 @@ app.post("/verifySession", async (req, res, next) => {
   }
 })
 
+app.get("/files/:file_code",async (req, res) => {
+  let file_code = req.params.file_code;
+  if (file_code.length !== 6){return res.sendStatus(400)}
+  let regex =/\d/
+  if (regex.test(file_code)){return res.sendStatus(400)}
+  let db_result = await retrieveFileInfo(file_code);
+  if (db_result === null) {
+    return res.sendStatus(404)
+  }
+  if (db_result !== null) {
+    let stored_name = db_result.stored_filename;
+    let original_name = db_result.original_name;
+    return res.download(process.env.UPLOAD_PATH+stored_name, original_name);
+  }
+})
+
+
 app.post(
     "/upload",
     authenticateUser,
@@ -340,6 +371,7 @@ app.use((err, req, res, next) => {
 
   next();
 });
+
 
 app.post("/login", async (req, res) => {
   let username = req.body.username;

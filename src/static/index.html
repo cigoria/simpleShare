@@ -628,7 +628,13 @@
           .map((input) => input.value)
           .join("");
         if (fullCode.length === 6) {
-          alert("Success! Your download is starting...");
+          const link = document.createElement("a");
+          link.href = "/files/"+fullCode;
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          form.reset()
         } else {
           alert("Error: Please enter exactly 6 lowercase letters.");
         }
