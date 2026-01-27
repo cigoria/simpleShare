@@ -18,7 +18,7 @@ const pool = mariadb.createPool({
 });
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "./static")));
+app.use(express.static(path.join(__dirname, "./public")));
 
 async function verifyCredentials(username, password) {
   let conn;
@@ -59,6 +59,9 @@ async function getPermissions(token) {
       token,
     ]);
     if (res1.length > 0) {
+      if (res1[0].is_valid !== 1){
+        return "none"
+      }
       let res2 = await conn.query("SELECT * FROM users WHERE id = ?", [res1[0].user_id]);
       if (res2.length > 0) {
         if (res2[0].is_admin == 1) {
@@ -220,6 +223,44 @@ async function prepareUploadContext(req, res, next) {
     req.maxUploadSize = remaining;
   }
   next();
+}
+
+async function userChangePassword(token, cur_password, new_password) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    let token_perm = await getPermissions(token);
+    let user_id = await validateToken(token);
+    if (token_perm !== "none" && user_id !== false) {
+      let cur_db_entry = await conn.query("SELECT * FROM users WHERE id = ?", [user_id]);
+      if (cur_db_entry.length > 0) {
+        const isMatch = await bcrypt.compare(cur_password, cur_db_entry[0].password_hash);
+        const isMatch_toNew = await bcrypt.compare(new_password, cur_db_entry[0].password_hash);
+        if (isMatch_toNew) {
+          return 1; // Error New password cannot be the same as the old
+        }
+
+        if (isMatch) {
+          let new_password_hash = await bcrypt.hash(new_password, 10);
+          let change_query = await conn.query("UPDATE users SET password_hash =? WHERE id = ?", [new_password_hash,user_id])
+          let delete_active_query = await conn.query("DELETE FROM session_tokens WHERE user_id = ?", [user_id]);
+          return 0; // Everything was a success
+        }
+        else {
+          return 2; // Invalid current password
+        }
+        }
+      else {
+        return 3 // Invalid credentials
+      }
+    }
+    else {
+      return 3; // Invalid credentials
+    }
+  }
+  finally {
+    if (conn) {conn.release();}
+  }
 }
 
 const uploadMiddleware = (req, res, next) => {
@@ -399,6 +440,23 @@ app.post("/logout", async (req, res) => {
   res.sendStatus(200)
 })
 
+app.post("/userChangePassword", async (req, res) => {
+  if (!req.body.token || !req.body.cur_password || !req.body.new_password){return res.status(400)}
+  let result = await userChangePassword(req.body.token,req.body.cur_password ,req.body.new_password);
+  if (result === 0) {
+    return res.status(200).json({message: "Password changed successfully!"});
+  }
+  if (result === 1) {
+    return res.status(400).json({message: "New password cannot be the same as the old password!"});
+  }
+  if (result === 2) {
+    return res.status(401).json({message: "Invalid current password!"});
+  }
+  if (result === 3) {
+    return res.status(401).json({message: "Invalid token!"});
+  }
+})
+
 app.post("/register", async (req, res) => {
   let new_username = req.body.username;
   let new_password = req.body.password;
@@ -419,7 +477,7 @@ app.post("/register", async (req, res) => {
   }
 });
 app.use("/", (req, res, next) => {
-  res.sendFile(path.join(__dirname, "./static/index.html"));
+  res.sendFile(path.join(__dirname, "./public/index.html"));
 });
 
 // Generic

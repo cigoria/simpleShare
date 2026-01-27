@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simpleShare</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="header">
+      <h1 id="logo">simple<span id="highlighted">Share</span></h1>
+      <div class="button-container">
+        <button class="menu-btn hidden" onclick=switchHamburber()><span class="material-icons-outlined">menu</span></button>
+        <button class="login-btn" onclick=document.getElementById("login-box").classList.remove("hidden");document.getElementById("login-background").classList.remove("hidden");>LOG IN</button>
+        <button class="upload-btn hidden" onclick=document.getElementById("upload-box").classList.remove("hidden");document.getElementById("upload-background").classList.remove("hidden");><span class="material-icons-outlined">upload</span></button>
+      </div>
+    </div>
+
+    <div class="container">
+      <form id="downloadForm">
+        <div class="input-box">
+          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
+          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
+          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
+          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
+          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
+          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
+        </div>
+        <button type="submit" class="download-btn">Download</button>
+      </form>
+    </div>
+
+
+    <div class="background hidden" id="upload-background" onclick=document.getElementById("upload-box").classList.add("hidden");document.getElementById("upload-background").classList.add("hidden");>
+      <div class="upload-box hidden" id="upload-box" onclick=event.stopPropagation();>
+        <button class="close-btn" id="upload-close-btn" onclick=document.getElementById("upload-box").classList.add("hidden");document.getElementById("upload-background").classList.add("hidden");><span class="material-icons-outlined">close</span></button>
+        <div class="drop_zone" id="drop_zone">
+          <p>
+            <span style="color: #5ef78c">Drop</span> or
+            <span style="color: #4c73f0">Select</span> files here
+          </p>
+        </div>
+        <div id="upload-status-box" class="hidden" style="display: none">
+          <span id="upload-status-symbol" class="material-icons-outlined hidden">error</span>
+          <span id="upload-status-text" class="hidden">Error: File too large!</span>
+          <span id="filecode-display" class="hidden" style="display: none">sguvae</span>
+          <span id="or" style="display: none">or</span>
+          <div id="link-display" class="hidden" style="display: none"><span id="link-text" style="display: inline"></span><span class="material-icons-outlined" id="copy-icon" style="display: inline">content_copy</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="background hidden" id="hambruber-background" onclick=switchHamburber()>
+      <div class="hamburber-menu hidden" id="hamburber-menu" >
+        <button class="burber-item hidden white" id="admin-dash"><span class="material-icons-outlined">dashboard</span>Admin dashboard</button>
+        <button class="burber-item hidden white" id="my-files"><span class="material-icons-outlined">folder</span> My files</button>
+        <button class="burber-item hidden white" id="change-password"><span class="material-icons-outlined">password</span> Change password</button>
+        <hr id="hamburber-separator" class="hidden">
+        <button class="burber-item hidden white" id="logout-menu-item" onclick=logout()><span class="material-icons-outlined">logout</span>Logout</button>
+      </div>
+    </div>
+
+    <div class="background hidden" id="login-background" onclick=document.getElementById("login-box").classList.add("hidden");document.getElementById("login-background").classList.add("hidden");>
+      <div class="login-box hidden" id="login-box" onclick=event.stopPropagation();>
+        <button class="close-btn" onclick=document.getElementById("login-box").classList.add("hidden");document.getElementById("login-background").classList.add("hidden");><span class="material-icons-outlined">close</span></button>
+        <form id="loginForm">
+          <input type="text" id="username" name="username" aria-label="Username" placeholder="Username" class="form-input" required> <br>
+          <input type="password" id="password" name="password" aria-label="Password" placeholder="Password" class="form-input" required> <br>
+          <button type="submit" class="submit-button" id="action-button">Login</button>
+          <label id="login-error-label"></label>
+        </form>
+      </div>
+    </div>
+
+    <script src="index.js"></script>
+  </body>
+</html>
