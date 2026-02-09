@@ -90,10 +90,15 @@
         >
           <span class="material-icons-outlined">upload</span>
         </button>
-        <div id="quota-container" style="display: none">
-          <span id="quota-text">250 MB of 500 MB</span>
-          <div id="progress-bar">
-            <div id="progress">50%</div>
+        <div id="quota-container" class="hidden">
+          <div class="flex flex-col items-center gap-2">
+            <span id="quota-text" class="text-sm whitespace-nowrap">68 MB of 100 MB</span>
+            <div class="flex items-center gap-2">
+              <div id="progress-bar" class="w-32 h-2 bg-gray-600 rounded-full overflow-hidden">
+                <div id="progress" class="h-full bg-green-500 rounded-full transition-all duration-300 ease-out w-[68%]"></div>
+              </div>
+              <span id="percentage-text" class="text-sm font-medium">68%</span>
+            </div>
           </div>
         </div>
       </div>

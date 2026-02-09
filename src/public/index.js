@@ -41,13 +41,16 @@ async function updateQuotaDisplay() {
         var quota_percent = 75
     }
     document.getElementById("quota-text").innerText = quota_text
-    document.getElementById("progress").innerText = quota_percent + "%"
     document.getElementById("progress").style.width = quota_percent + "%"
-    if (quota_percent <= 100 ) {document.getElementById("progress").style.backgroundColor = "#f77b5e"; }
-    if (quota_percent <= 90 ) {document.getElementById("progress").style.backgroundColor = "#f7e15e"; }
-    if (quota_percent <= 75 ) {document.getElementById("progress").style.backgroundColor = "#5ef78c"; }
+    document.getElementById("percentage-text").innerText = quota_percent + "%"
+    
+    // Update progress bar color based on percentage
+    const progressElement = document.getElementById("progress");
+    if (quota_percent <= 100 ) { progressElement.style.backgroundColor = "#f77b5e"; }
+    if (quota_percent <= 90 ) { progressElement.style.backgroundColor = "#f7e15e"; }
+    if (quota_percent <= 75 ) { progressElement.style.backgroundColor = "#5ef78c"; }
 
-    document.getElementById("quota-container").style.display = "flex";
+    document.getElementById("quota-container").classList.remove("hidden");
 }
 
 async function updateFilesDisplay() {
