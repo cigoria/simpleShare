@@ -205,6 +205,7 @@ function switchHamburber() {
     document.getElementById("hamburber-separator").classList.add("hidden");
     document.getElementById("logout-menu-item").classList.add("hidden");
     document.getElementById("admin-dash").classList.add("hidden");
+    document.getElementById("register-user").classList.add("hidden");
 
     burber_open = false;
   } else {
@@ -220,6 +221,7 @@ function switchHamburber() {
       access_level.then((value) => {
         if (value === "admin") {
           document.getElementById("admin-dash").classList.remove("hidden");
+          document.getElementById("register-user").classList.remove("hidden");
         }
       });
     }
@@ -308,6 +310,57 @@ inputs.forEach((input, index) => {
     checkFileExists();
   });
 });
+
+// User registration form handler
+document
+  .getElementById("registerUserForm")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const username = document.getElementById("reg-username").value;
+    const password = document.getElementById("reg-password").value;
+    const token = localStorage.getItem("token");
+
+    // Clear previous messages
+    document.getElementById("register-error-label").innerText = "";
+    document.getElementById("register-success-label").innerText = "";
+
+    try {
+      const response = await fetch("/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          token: token,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.status === 200) {
+        document.getElementById("register-success-label").innerText = 
+          "User registered successfully!";
+        // Clear form
+        document.getElementById("reg-username").value = "";
+        document.getElementById("reg-password").value = "";
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          document.getElementById("register-user-background").classList.add("hidden");
+          document.getElementById("register-success-label").innerText = "";
+        }, 2000);
+      } else {
+        document.getElementById("register-error-label").innerText = 
+          result.error || "Registration failed!";
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      document.getElementById("register-error-label").innerText = 
+        "Network error. Please try again.";
+    }
+  });
 
 // Function to check if file exists and display filename or "Check ID"
 async function checkFileExists() {
@@ -695,5 +748,56 @@ document
       }
     } catch (err) {
       console.error("Fetch error:", err);
+    }
+  });
+
+// User registration form handler
+document
+  .getElementById("registerUserForm")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const username = document.getElementById("reg-username").value;
+    const password = document.getElementById("reg-password").value;
+    const token = localStorage.getItem("token");
+
+    // Clear previous messages
+    document.getElementById("register-error-label").innerText = "";
+    document.getElementById("register-success-label").innerText = "";
+
+    try {
+      const response = await fetch("/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password,
+          token: token,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.status === 200) {
+        document.getElementById("register-success-label").innerText = 
+          "User registered successfully!";
+        // Clear form
+        document.getElementById("reg-username").value = "";
+        document.getElementById("reg-password").value = "";
+        // Close modal after 2 seconds
+        setTimeout(() => {
+          document.getElementById("register-user-background").classList.add("hidden");
+          document.getElementById("register-success-label").innerText = "";
+        }, 2000);
+      } else {
+        document.getElementById("register-error-label").innerText = 
+          result.error || "Registration failed!";
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      document.getElementById("register-error-label").innerText = 
+        "Network error. Please try again.";
     }
   });
