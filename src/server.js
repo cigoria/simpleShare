@@ -19,7 +19,14 @@ const pool = mariadb.createPool({
   charset: "utf8mb4",
 });
 const app = express();
-app.use(express.json());
+
+// Set proper encoding headers
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  next();
+});
+
+app.use(express.json({ charset: 'utf-8' }));
 app.use(express.static(path.join(__dirname, "./public")));
 
 async function verifyCredentials(username, password) {
@@ -611,6 +618,37 @@ app.post("/quota", async (req, res) => {
       ? Number(used_quota.total_used)
       : used_quota.total_used,
   });
+});
+
+app.post("/checkFile", async (req, res) => {
+  let file_code = req.body.code;
+  if (!file_code || file_code.length !== 6) {
+    return res.status(400).json({ exists: false });
+  }
+  let regex = /\d/;
+  if (regex.test(file_code)) {
+    return res.status(400).json({ exists: false });
+  }
+  let db_result = await retrieveFileInfo(file_code);
+  if (db_result === null) {
+    return res.status(200).json({ exists: false });
+  } else {
+    // Fix encoding for special characters
+    let filename = db_result.original_name;
+    try {
+      // Try to decode if it's double-encoded
+      filename = decodeURIComponent(escape(filename));
+    } catch (e) {
+      // If decoding fails, use original
+      filename = db_result.original_name;
+    }
+    
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    return res.status(200).json({ 
+      exists: true, 
+      filename: filename 
+    });
+  }
 });
 
 app.post("/getAllFiles", async (req, res) => {

@@ -168,7 +168,7 @@
       </div>
     </div>
 
-    <div class="text-center container animate-slide-up">
+    <div class="text-center container animate-slide-up mt-20">
       <!-- Code input -->
       <form id="downloadForm">
         <div class="mb-5 flex justify-center gap-[10px] input-box">
@@ -222,11 +222,13 @@
           />
         </div>
         <button
+          id="download-btn"
           type="submit"
-          class="bg-secondary-button border-none px-10 py-[15px] rounded-xl text-[22px] font-red-hat cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-secondary-button/50 active:scale-95 download-btn text-black animate-bounce-gentle"
+          class="bg-secondary-button border-none px-10 py-[15px] rounded-xl text-[22px] font-red-hat cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-secondary-button/50 active:scale-95 download-btn text-black animate-bounce-gentle"
         >
           Download
         </button>
+        <div id="file-info" class="text-lg font-inter text-gray-300 min-h-[28px] opacity-0 transition-all duration-300"></div>
       </form>
     </div>
 

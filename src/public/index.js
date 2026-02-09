@@ -159,6 +159,14 @@ async function download(code) {
   link.click();
   document.body.removeChild(link);
   form.reset();
+  
+  // Reset animation
+  const fileInfoElement = document.getElementById("file-info");
+  const downloadBtn = document.getElementById("download-btn");
+  fileInfoElement.textContent = "";
+  fileInfoElement.classList.remove("opacity-100");
+  fileInfoElement.classList.add("opacity-0");
+  downloadBtn.classList.remove("mb-5");
 }
 
 async function deleteFile(code) {
@@ -256,12 +264,17 @@ inputs.forEach((input, index) => {
     if (e.target.value.length === 1 && index < inputs.length - 1) {
       inputs[index + 1].focus();
     }
+
+    // Check file when all 6 characters are entered
+    checkFileExists();
   });
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "Backspace" && e.target.value === "" && index > 0) {
       inputs[index - 1].focus();
     }
+    // Check file exists after backspace
+    setTimeout(checkFileExists, 10);
   });
 
   input.addEventListener("paste", (e) => {
@@ -290,8 +303,82 @@ inputs.forEach((input, index) => {
     } else {
       inputs[inputs.length - 1].focus();
     }
+
+    // Check file after paste
+    checkFileExists();
   });
 });
+
+// Function to check if file exists and display filename or "Check ID"
+async function checkFileExists() {
+  const fullCode = Array.from(inputs)
+    .map((input) => input.value)
+    .join("");
+  
+  const fileInfoElement = document.getElementById("file-info");
+  const downloadBtn = document.getElementById("download-btn");
+  
+  if (fullCode.length === 6) {
+    try {
+      const response = await fetch("/checkFile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=UTF-8",
+        },
+        body: JSON.stringify({ code: fullCode }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.exists) {
+          // Ensure proper display of special characters
+          let filename = result.filename;
+          try {
+            // Additional safety check for encoding
+            filename = decodeURIComponent(escape(filename));
+          } catch (e) {
+            // Use original if decoding fails
+            filename = result.filename;
+          }
+          
+          fileInfoElement.textContent = filename;
+          fileInfoElement.style.color = "#5ef78c";
+        } else {
+          fileInfoElement.textContent = "Check ID";
+          fileInfoElement.style.color = "#f77b5e";
+        }
+        
+        // Animate: add margin to button and show text
+        downloadBtn.classList.add("mb-5");
+        fileInfoElement.classList.remove("opacity-0");
+        fileInfoElement.classList.add("opacity-100");
+      } else {
+        fileInfoElement.textContent = "Check ID";
+        fileInfoElement.style.color = "#f77b5e";
+        
+        // Animate: add margin to button and show text
+        downloadBtn.classList.add("mb-5");
+        fileInfoElement.classList.remove("opacity-0");
+        fileInfoElement.classList.add("opacity-100");
+      }
+    } catch (error) {
+      console.error("Error checking file:", error);
+      fileInfoElement.textContent = "Check ID";
+      fileInfoElement.style.color = "#f77b5e";
+      
+      // Animate: add margin to button and show text
+      downloadBtn.classList.add("mb-5");
+      fileInfoElement.classList.remove("opacity-0");
+      fileInfoElement.classList.add("opacity-100");
+    }
+  } else {
+    // Hide text and remove margin when not 6 characters
+    fileInfoElement.textContent = "";
+    fileInfoElement.classList.remove("opacity-100");
+    fileInfoElement.classList.add("opacity-0");
+    downloadBtn.classList.remove("mb-5");
+  }
+}
 
 inputs[0].focus();
 
@@ -321,6 +408,14 @@ form.addEventListener("submit", (e) => {
       link.click();
       document.body.removeChild(link);
       form.reset();
+      
+      // Reset animation
+      const fileInfoElement = document.getElementById("file-info");
+      const downloadBtn = document.getElementById("download-btn");
+      fileInfoElement.textContent = "";
+      fileInfoElement.classList.remove("opacity-100");
+      fileInfoElement.classList.add("opacity-0");
+      downloadBtn.classList.remove("mb-5");
     }, 400);
   } else {
     // Error animation
