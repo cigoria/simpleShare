@@ -40,6 +40,58 @@
               inter: ["Inter", "sans-serif"],
               "red-hat": ["Red Hat Mono", "monospace"],
             },
+            animation: {
+              "fade-in": "fadeIn 0.3s ease-in-out",
+              "fade-out": "fadeOut 0.3s ease-in-out",
+              "slide-up": "slideUp 0.3s ease-out",
+              "slide-down": "slideDown 0.3s ease-out",
+              "scale-in": "scaleIn 0.2s ease-out",
+              "scale-out": "scaleOut 0.2s ease-in",
+              "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              "spin-slow": "spin 2s linear infinite",
+              "bounce-gentle": "bounceGentle 0.6s ease-out",
+              "shake": "shake 0.5s ease-in-out",
+              "glow": "glow 2s ease-in-out infinite alternate",
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: "0" },
+                "100%": { opacity: "1" },
+              },
+              fadeOut: {
+                "0%": { opacity: "1" },
+                "100%": { opacity: "0" },
+              },
+              slideUp: {
+                "0%": { transform: "translateY(20px)", opacity: "0" },
+                "100%": { transform: "translateY(0)", opacity: "1" },
+              },
+              slideDown: {
+                "0%": { transform: "translateY(-20px)", opacity: "0" },
+                "100%": { transform: "translateY(0)", opacity: "1" },
+              },
+              scaleIn: {
+                "0%": { transform: "scale(0.9)", opacity: "0" },
+                "100%": { transform: "scale(1)", opacity: "1" },
+              },
+              scaleOut: {
+                "0%": { transform: "scale(1)", opacity: "1" },
+                "100%": { transform: "scale(0.9)", opacity: "0" },
+              },
+              bounceGentle: {
+                "0%, 100%": { transform: "translateY(0)" },
+                "50%": { transform: "translateY(-5px)" },
+              },
+              shake: {
+                "0%, 100%": { transform: "translateX(0)" },
+                "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-2px)" },
+                "20%, 40%, 60%, 80%": { transform: "translateX(2px)" },
+              },
+              glow: {
+                "0%": { boxShadow: "0 0 5px rgba(103, 146, 255, 0.5)" },
+                "100%": { boxShadow: "0 0 20px rgba(103, 146, 255, 0.8)" },
+              },
+            },
           },
         },
       };
@@ -50,12 +102,12 @@
   >
     <div
       id="header"
-      class="absolute top-0 left-0 w-full h-[100px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400"
+      class="absolute top-0 left-0 w-full h-[100px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400 animate-slide-down"
     >
       <!-- Top header bar -->
       <h1
         id="logo"
-        class="absolute p-0 m-[10px] top-5 left-5 font-inter font-normal text-white text-3xl"
+        class="absolute p-0 m-[10px] top-5 left-5 font-inter font-normal text-white text-3xl animate-fade-in"
       >
         simple<span
           id="highlighted"
@@ -67,13 +119,13 @@
         class="absolute top-5 right-5 flex justify-end items-end flex-row-reverse"
       >
         <button
-          class="h-[42px] bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center m-[10px] menu-btn hidden"
+          class="h-[42px] bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center m-[10px] menu-btn hidden transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-scale-in"
           onclick="switchHamburber()"
         >
           <span class="material-icons-outlined">menu</span>
         </button>
         <button
-          class="bg-primary-button text-black border-none px-[25px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] m-[10px] login-btn"
+          class="bg-primary-button text-black border-none px-[25px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] m-[10px] login-btn transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-fade-in"
           onclick="
             document.getElementById('login-box').classList.remove('hidden');
             document
@@ -84,7 +136,7 @@
           LOG IN
         </button>
         <button
-          class="h-[42px] bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center m-[10px] upload-btn hidden"
+          class="h-[42px] bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center m-[10px] upload-btn hidden transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50"
           onclick="
             document.getElementById('upload-box').classList.remove('hidden');
             document
@@ -102,27 +154,27 @@
             <div class="flex items-center gap-2">
               <div
                 id="progress-bar"
-                class="w-32 h-2 bg-gray-600 rounded-full overflow-hidden"
+                class="w-32 h-2 bg-gray-600 rounded-full overflow-hidden transition-all duration-500"
               >
                 <div
                   id="progress"
-                  class="h-full bg-green-500 rounded-full transition-all duration-300 ease-out w-[68%]"
+                  class="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full transition-all duration-700 ease-out w-[68%]"
                 ></div>
               </div>
-              <span id="percentage-text" class="text-sm font-medium">68%</span>
+              <span id="percentage-text" class="text-sm font-medium transition-all duration-300">68%</span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="text-center container">
+    <div class="text-center container animate-slide-up">
       <!-- Code input -->
       <form id="downloadForm">
         <div class="mb-5 flex justify-center gap-[10px] input-box">
           <input
             type="text"
-            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-colors code-input"
+            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-all duration-200 code-input focus:scale-110 focus:shadow-lg focus:shadow-primary-button/30"
             maxlength="1"
             required
             autocomplete="off"
@@ -130,7 +182,7 @@
           />
           <input
             type="text"
-            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-colors code-input"
+            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-all duration-200 code-input focus:scale-110 focus:shadow-lg focus:shadow-primary-button/30"
             maxlength="1"
             required
             autocomplete="off"
@@ -138,7 +190,7 @@
           />
           <input
             type="text"
-            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-colors code-input"
+            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-all duration-200 code-input focus:scale-110 focus:shadow-lg focus:shadow-primary-button/30"
             maxlength="1"
             required
             autocomplete="off"
@@ -146,7 +198,7 @@
           />
           <input
             type="text"
-            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-colors code-input"
+            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-all duration-200 code-input focus:scale-110 focus:shadow-lg focus:shadow-primary-button/30"
             maxlength="1"
             required
             autocomplete="off"
@@ -154,7 +206,7 @@
           />
           <input
             type="text"
-            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-colors code-input"
+            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-all duration-200 code-input focus:scale-110 focus:shadow-lg focus:shadow-primary-button/30"
             maxlength="1"
             required
             autocomplete="off"
@@ -162,7 +214,7 @@
           />
           <input
             type="text"
-            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-colors code-input"
+            class="bg-input border-none outline-none font-inter text-[28px] w-12 h-[52px] text-center text-[#333] rounded-lg shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] transition-all duration-200 code-input focus:scale-110 focus:shadow-lg focus:shadow-primary-button/30"
             maxlength="1"
             required
             autocomplete="off"
@@ -171,7 +223,7 @@
         </div>
         <button
           type="submit"
-          class="bg-secondary-button border-none px-10 py-[15px] rounded-xl text-[22px] font-red-hat cursor-pointer transition-transform transition-colors hover:opacity-90 active:scale-95 download-btn text-black"
+          class="bg-secondary-button border-none px-10 py-[15px] rounded-xl text-[22px] font-red-hat cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-secondary-button/50 active:scale-95 download-btn text-black animate-bounce-gentle"
         >
           Download
         </button>
@@ -188,12 +240,12 @@
     >
       <!-- Upload modal -->
       <div
-        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center flex-col m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all modal hidden"
+        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center flex-col m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all duration-300 modal hidden animate-scale-in"
         id="upload-box"
         onclick="event.stopPropagation()"
       >
         <button
-          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn"
+          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-primary-button/50"
           id="upload-close-btn"
           onclick="
             document.getElementById('upload-box').classList.add('hidden');
@@ -205,7 +257,7 @@
           <span class="material-icons-outlined">close</span>
         </button>
         <div
-          class="font-inter text-2xl relative h-[80%] w-[80%] flex items-center justify-center m-[100px_auto] rounded-[28px] border-0 transition-all drop_zone cursor-pointer"
+          class="font-inter text-2xl relative h-[80%] w-[80%] flex items-center justify-center m-[100px_auto] rounded-[28px] border-0 transition-all duration-300 drop_zone cursor-pointer hover:scale-105"
           id="drop_zone"
         >
           <p>
@@ -238,7 +290,7 @@
               <div class="flex items-center justify-center gap-3">
                 <span
                   id="filecode-display"
-                  class="text-3xl font-red-hat font-bold text-primary-button cursor-pointer group relative"
+                  class="text-3xl font-red-hat font-bold text-primary-button cursor-pointer group relative transition-all duration-200 hover:scale-110 hover:text-secondary-button"
                   title="Click to copy"
                 >
                   <span
@@ -259,7 +311,7 @@
                 ></span>
                 <button
                   id="copy-link-btn"
-                  class="p-2 rounded-lg hover:bg-black/20 transition-colors group relative"
+                  class="p-2 rounded-lg hover:bg-black/20 transition-all duration-200 group relative hover:scale-110"
                   title="Click to copy"
                 >
                   <span
@@ -285,18 +337,18 @@
     >
       <!-- Hamburger menu -->
       <div
-        class="z-10 absolute top-[90px] right-5 p-[10px] flex flex-col justify-center items-center bg-[hsl(0,0%,12%)] rounded-lg border border-[#a1a1a1] transition-all backdrop-blur-[20px] hamburber-menu hidden"
+        class="z-10 absolute top-[90px] right-5 p-[10px] flex flex-col justify-center items-center bg-[hsl(0,0%,12%)] rounded-lg border border-[#a1a1a1] transition-all duration-300 backdrop-blur-[20px] hamburber-menu hidden animate-slide-down"
         id="hamburber-menu"
       >
         <button
-          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] burber-item hidden white"
+          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] transition-all duration-200 hover:scale-105 hover:shadow-lg burber-item hidden white"
           id="admin-dash"
           onclick="redirectToDashboard()"
         >
           <span class="material-icons-outlined">dashboard</span>Admin dashboard
         </button>
         <button
-          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] burber-item hidden white"
+          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] transition-all duration-200 hover:scale-105 hover:shadow-lg burber-item hidden white"
           id="my-files"
           onclick="
             document
@@ -307,7 +359,7 @@
           <span class="material-icons-outlined">folder</span> My files
         </button>
         <button
-          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] burber-item hidden white"
+          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] transition-all duration-200 hover:scale-105 hover:shadow-lg burber-item hidden white"
           id="change-password"
           onclick="
             document
@@ -319,7 +371,7 @@
         </button>
         <hr id="hamburber-separator" class="hidden" />
         <button
-          class="h-[42px] w-[200px] border border-error bg-[hsla(11,91%,67%,0.5)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[hsla(11,91%,67%,0.45)] hover:drop-shadow-[0px_0px_10px_hsla(11,91%,67%,0.8)] burber-item hidden white"
+          class="h-[42px] w-[200px] border border-error bg-[hsla(11,91%,67%,0.5)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[hsla(11,91%,67%,0.45)] hover:drop-shadow-[0px_0px_10px_hsla(11,91%,67%,0.8)] transition-all duration-200 hover:scale-105 hover:shadow-lg burber-item hidden white"
           id="logout-menu-item"
           onclick="logout()"
         >
@@ -337,12 +389,12 @@
       "
     >
       <div
-        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all modal hidden"
+        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all duration-300 modal hidden animate-scale-in"
         id="login-box"
         onclick="event.stopPropagation()"
       >
         <button
-          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn"
+          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-primary-button/50"
           onclick="
             document.getElementById('login-box').classList.add('hidden');
             document.getElementById('login-background').classList.add('hidden');
@@ -357,7 +409,7 @@
             name="username"
             aria-label="Username"
             placeholder="Username"
-            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input select-text caret-black text-black"
+            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input select-text caret-black text-black transition-all duration-200 focus:scale-105 focus:shadow-lg focus:shadow-primary-button/30"
             required
           />
           <br />
@@ -367,13 +419,13 @@
             name="password"
             aria-label="Password"
             placeholder="Password"
-            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input text-black select-text caret-black"
+            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input text-black select-text caret-black transition-all duration-200 focus:scale-105 focus:shadow-lg focus:shadow-primary-button/30"
             required
           />
           <br />
           <button
             type="submit"
-            class="min-w-[300px] p-[15px] mt-[15px] rounded-[20px] border-none text-xl cursor-pointer bg-primary-button font-red-hat transition-colors submit-button text-black"
+            class="min-w-[300px] p-[15px] mt-[15px] rounded-[20px] border-none text-xl cursor-pointer bg-primary-button font-red-hat transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 submit-button text-black"
             id="action-button"
           >
             Login
@@ -393,12 +445,12 @@
       "
     >
       <div
-        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all modal"
+        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all duration-300 modal animate-scale-in"
         id="change-password-box"
         onclick="event.stopPropagation()"
       >
         <button
-          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn"
+          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-primary-button/50"
           id="change-password-close-btn"
           onclick="
             document
@@ -415,7 +467,7 @@
             name="old-password"
             aria-label="Old password"
             placeholder="Old password"
-            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input text-black select-text caret-black"
+            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input text-black select-text caret-black transition-all duration-200 focus:scale-105 focus:shadow-lg focus:shadow-primary-button/30"
             required
           />
           <br />
@@ -425,13 +477,13 @@
             name="new-password"
             aria-label="New password"
             placeholder="New password"
-            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input text-black select-text caret-black"
+            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input text-black select-text caret-black transition-all duration-200 focus:scale-105 focus:shadow-lg focus:shadow-primary-button/30"
             required
           />
           <br />
           <button
             type="submit"
-            class="min-w-[300px] p-[15px] mt-[15px] rounded-[20px] border-none text-xl cursor-pointer bg-primary-button font-red-hat transition-colors submit-button text-black"
+            class="min-w-[300px] p-[15px] mt-[15px] rounded-[20px] border-none text-xl cursor-pointer bg-primary-button font-red-hat transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 submit-button text-black"
             id="change-password-button"
           >
             Change
@@ -448,12 +500,12 @@
       "
     >
       <div
-        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all modal"
+        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all duration-300 modal animate-scale-in"
         id="my-files-box"
         onclick="event.stopPropagation()"
       >
         <button
-          class="absolute top-2 right-2 bg-primary-button text-black border-none w-[42px] h-[42px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-20 close-btn flex items-center justify-center"
+          class="absolute top-2 right-2 bg-primary-button text-black border-none w-[42px] h-[42px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-20 close-btn flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-primary-button/50"
           id="my-files-close-btn"
           onclick="
             document

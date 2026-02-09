@@ -69,14 +69,16 @@ async function updateQuotaDisplay() {
 
   // Update progress bar color based on percentage
   const progressElement = document.getElementById("progress");
-  if (quota_percent <= 100) {
-    progressElement.style.backgroundColor = "#f77b5e";
-  }
-  if (quota_percent <= 90) {
-    progressElement.style.backgroundColor = "#f7e15e";
-  }
-  if (quota_percent <= 75) {
-    progressElement.style.backgroundColor = "#5ef78c";
+  progressElement.style.transition = "background-color 0.5s ease, background 0.5s ease";
+  
+  if (quota_percent > 100) {
+    progressElement.style.background = "linear-gradient(to right, #f77b5e, #f7e15e)";
+  } else if (quota_percent > 90) {
+    progressElement.style.background = "linear-gradient(to right, #f7e15e, #f7e15e)";
+  } else if (quota_percent > 75) {
+    progressElement.style.background = "linear-gradient(to right, #5ef78c, #f7e15e)";
+  } else {
+    progressElement.style.background = "linear-gradient(to right, #5ef78c, #5ef78c)";
   }
 
   document.getElementById("quota-container").classList.remove("hidden");
@@ -242,6 +244,14 @@ const form = document.getElementById("downloadForm");
 inputs.forEach((input, index) => {
   input.addEventListener("input", (e) => {
     e.target.value = e.target.value.toLowerCase().replace(/[^a-z]/g, "");
+    
+    // Add subtle animation on input
+    e.target.style.transform = "scale(1.1)";
+    e.target.style.backgroundColor = "#e8f5e8";
+    setTimeout(() => {
+      e.target.style.transform = "";
+      e.target.style.backgroundColor = "";
+    }, 150);
 
     if (e.target.value.length === 1 && index < inputs.length - 1) {
       inputs[index + 1].focus();
@@ -291,14 +301,39 @@ form.addEventListener("submit", (e) => {
     .map((input) => input.value)
     .join("");
   if (fullCode.length === 6) {
-    const link = document.createElement("a");
-    link.href = "/files/" + fullCode;
-    link.style.display = "none";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    form.reset();
+    // Success animation
+    inputs.forEach((input, index) => {
+      setTimeout(() => {
+        input.classList.add("animate-bounce-gentle");
+        input.style.backgroundColor = "#5ef78c";
+        setTimeout(() => {
+          input.classList.remove("animate-bounce-gentle");
+          input.style.backgroundColor = "";
+        }, 600);
+      }, index * 50);
+    });
+    
+    setTimeout(() => {
+      const link = document.createElement("a");
+      link.href = "/files/" + fullCode;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      form.reset();
+    }, 400);
   } else {
+    // Error animation
+    inputs.forEach((input, index) => {
+      setTimeout(() => {
+        input.classList.add("animate-shake");
+        input.style.backgroundColor = "#f77b5e";
+        setTimeout(() => {
+          input.classList.remove("animate-shake");
+          input.style.backgroundColor = "";
+        }, 500);
+      }, index * 30);
+    });
     alert("Error: Please enter exactly 6 lowercase letters.");
   }
 });
@@ -309,14 +344,22 @@ let dropZone = document.getElementById("drop_zone");
 dropZone.addEventListener("dragover", (event) => {
   event.preventDefault();
   dropZone.classList.add("dragover");
+  dropZone.style.transform = "scale(1.05)";
+  dropZone.style.backgroundColor = "rgba(103, 146, 255, 0.1)";
 });
 dropZone.addEventListener("dragleave", (event) => {
   event.preventDefault();
   dropZone.classList.remove("dragover");
+  dropZone.style.transform = "";
+  dropZone.style.backgroundColor = "";
+  dropZone.style.borderColor = "";
 });
 dropZone.addEventListener("drop", (event) => {
   event.preventDefault();
   dropZone.classList.remove("dragover");
+  dropZone.style.transform = "";
+  dropZone.style.backgroundColor = "";
+  dropZone.style.borderColor = "";
   let files = event.dataTransfer.files;
   handleFiles(files);
 });
@@ -342,9 +385,9 @@ async function handleFiles(files) {
   document.getElementById("upload-status-box").style.display = "flex";
   document
     .getElementById("upload-status-symbol")
-    .classList.add("yellow-working");
-  document.getElementById("upload-status-symbol").innerText = "construction";
-  document.getElementById("upload-status-text").classList.add("yellow-working");
+    .classList.add("animate-spin-slow");
+  document.getElementById("upload-status-symbol").innerText = "hourglass_empty";
+  document.getElementById("upload-status-text").classList.add("animate-pulse-slow");
   document.getElementById("upload-status-text").innerText = "Working...";
   document
     .getElementById("upload-close-btn")
@@ -367,12 +410,12 @@ async function handleFiles(files) {
     console.error("Upload failed:", error.error);
     document
       .getElementById("upload-status-symbol")
-      .classList.remove("yellow-working");
+      .classList.remove("animate-spin-slow");
     document
       .getElementById("upload-status-text")
-      .classList.remove("yellow-working");
-    document.getElementById("upload-status-symbol").classList.add("red-error");
-    document.getElementById("upload-status-text").classList.add("red-error");
+      .classList.remove("animate-pulse-slow");
+    document.getElementById("upload-status-symbol").classList.add("animate-shake");
+    document.getElementById("upload-status-text").classList.add("animate-shake");
     document.getElementById("upload-status-symbol").innerText = "error";
     console.log(response.status);
     if (response.status == 400) {
@@ -393,16 +436,16 @@ async function handleFiles(files) {
   } else {
     document
       .getElementById("upload-status-symbol")
-      .classList.remove("yellow-working");
+      .classList.remove("animate-spin-slow");
     document
       .getElementById("upload-status-text")
-      .classList.remove("yellow-working");
+      .classList.remove("animate-pulse-slow");
     document
       .getElementById("upload-status-symbol")
-      .classList.add("green-success");
+      .classList.add("animate-bounce-gentle");
     document
       .getElementById("upload-status-text")
-      .classList.add("green-success");
+      .classList.add("animate-bounce-gentle");
     document.getElementById("upload-status-symbol").innerText = "check";
     document.getElementById("upload-status-text").innerText =
       "Upload successful!";
