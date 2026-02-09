@@ -158,6 +158,10 @@ async function deleteFile(code) {
     await updateQuotaDisplay();
 }
 
+function redirectToDashboard() {
+    location.href = "/admin/dashboard/"+localStorage.getItem("token");
+}
+
 let access_level = verifyAccessToken();
 updateQuotaDisplay()
 updateFilesDisplay()

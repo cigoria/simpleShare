@@ -53,7 +53,36 @@ async function verifyCredentials(username, password) {
   }
 }
 
-async function uploadImage(req, res) {}
+async function retrieveUsersWithFiles(username) {
+  let conn;
+  try {
+    let return_obj = []
+    conn = await pool.getConnection();
+    let users = await conn.query("SELECT * FROM users");
+    for (let user of users) {
+      let curr_obj = {}
+      curr_obj.user_id = user.id;
+      curr_obj.username = user.username;
+      curr_obj.quota = user.quota_in_bytes;
+      curr_obj.is_admin= user.is_admin;
+      curr_obj.creation_date = user.date_of_creation
+      curr_obj.files = []
+      let curr_files_result = await conn.query("SELECT FROM file_index WHERE user_id = ? ", [user.id]);
+      for (let file of curr_files_result) {
+        curr_file_obj = {}
+        curr_file_obj.id = file.id;
+        curr_file_obj.visibility = file.visibility;
+        curr_file_obj.size = file.file_size_in_bytes;
+        curr_file_obj.originalname = file.original_name;
+        curr_file_obj.mimetype = file.mime_type;
+        curr_obj.files.push(curr_file_obj);
+      }
+    }
+  }
+  finally {
+    if (conn) conn.release();
+  }
+}
 
 async function getPermissions(token) {
   let conn;
@@ -479,6 +508,36 @@ app.get("/delete/:file_code",async (req, res) => {
   }
 })
 
+app.get("/admin/getAllUsersWithFiles",async (req, res) => {
+  if (!req.headers.authorization) {return res.sendStatus(401)}
+  let perms = await getPermissions(req.headers.authorization);
+  let user_id = await validateToken(req.headers.authorization);
+  if (perms === "none") {
+    return res.sendStatus(401)
+  }
+  if (perms === "user") {
+    let file_info = await retrieveFileInfo(file_code);
+    if (file_info.user_id === user_id) {
+      let result = await deleteFile(file_code);
+      if (result === true) {
+        return res.sendStatus(200)
+      }
+      else {
+        return res.status(500).json({error: result})
+      }
+    }
+  }
+  if (perms === "admin") {
+    let result = await retrieveFileInfo();
+    if (result === true) {
+      console.log(result)
+    }
+    else {
+      return res.status(500).json({error: result})
+    }
+  }
+})
+
 app.post("/quota", async (req, res) => {
   if (!req.body.token) return res.sendStatus(401)
   let token = req.body.token;
@@ -486,8 +545,11 @@ app.post("/quota", async (req, res) => {
   if (await getPermissions(token) === "none" || !user_id) {
     return res.sendStatus(401)
   }
-  let total_quota = await getTotalQuota(user_id);
-  let used_quota = await getUsedQuota(user_id);
+  let total_quota = await getTotalQuota(user_id)
+  let used_quota = await getUsedQuota(user_id)
+  used_quota = used_quota.total_used
+  used_quota = used_quota.toString()
+  total_quota = total_quota.toString()
 
   return res.status(200).json({
     "total": total_quota ? Number(total_quota) : total_quota,
@@ -612,6 +674,30 @@ app.use("/", (req, res, next) => {
   res.sendFile(path.join(__dirname, "./public/index.html"));
 });
 
+app.get("/admin/dashboard/:token", async (req, res) => {
+  if (!req.params.token) {return res.sendStatus(401)}
+  console.log(req.params.token);
+  let perms = await getPermissions(req.params.token);
+  let user_id = await validateToken(req.params.token);
+  if (perms === "none") {
+    return res.sendStatus(401)
+  }
+  if (perms === "user") {
+    let file_info = await retrieveFileInfo(file_code);
+    if (file_info.user_id === user_id) {
+      let result = await deleteFile(file_code);
+      if (result === true) {
+        return res.sendStatus(200)
+      }
+      else {
+        return res.status(500).json({error: result})
+      }
+    }
+  }
+  if (perms === "admin") {
+    res.sendFile(path.join(__dirname, "./public/index.html"));
+  }
+})
 
 
 // Generic
