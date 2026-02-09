@@ -4,16 +4,93 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>simpleShare</title>
-    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Red+Hat+Mono:ital,wght@0,300..700;1,300..700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary-button": "#6792ff",
+              "secondary-button": "#5ef78c",
+              bg: "#181818",
+              text: "#ffffff",
+              input: "#d9d9d9",
+              ok: "#5ef78c",
+              danger: "#f7e15e",
+              error: "#f77b5e",
+              main: "#1f1f1f",
+            },
+            fontFamily: {
+              inter: ["Inter", "sans-serif"],
+              "red-hat": ["Red Hat Mono", "monospace"],
+            },
+          },
+        },
+      };
+    </script>
   </head>
-  <body>
-    <div id="header"> <!-- Top header bar -->
-      <h1 id="logo">simple<span id="highlighted">Share</span></h1>
-      <div class="button-container">
-        <button class="menu-btn hidden" onclick=switchHamburber()><span class="material-icons-outlined">menu</span></button>
-        <button class="login-btn" onclick=document.getElementById("login-box").classList.remove("hidden");document.getElementById("login-background").classList.remove("hidden");>LOG IN</button>
-        <button class="upload-btn hidden" onclick=document.getElementById("upload-box").classList.remove("hidden");document.getElementById("upload-background").classList.remove("hidden");><span class="material-icons-outlined">upload</span></button>
-        <div id="quota-container" style="display:none">
+  <body
+    class="m-0 p-0 bg-bg text-white font-inter flex justify-center items-center h-screen overflow-hidden"
+  >
+    <div
+      id="header"
+      class="absolute top-0 left-0 w-full h-[100px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400"
+    >
+      <!-- Top header bar -->
+      <h1
+        id="logo"
+        class="absolute p-0 m-[10px] top-5 left-5 font-inter font-normal text-white text-3xl"
+      >
+        simple<span
+          id="highlighted"
+          class="bg-gradient-to-r from-primary-button to-secondary-button bg-clip-text text-transparent"
+          >Share</span
+        >
+      </h1>
+      <div
+        class="absolute top-5 right-5 flex justify-end items-end flex-row-reverse"
+      >
+        <button
+          class="h-[42px] bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center m-[10px] menu-btn hidden"
+          onclick="switchHamburber()"
+        >
+          <span class="material-icons-outlined">menu</span>
+        </button>
+        <button
+          class="bg-primary-button text-black border-none px-[25px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] m-[10px] login-btn"
+          onclick="
+            document.getElementById('login-box').classList.remove('hidden');
+            document
+              .getElementById('login-background')
+              .classList.remove('hidden');
+          "
+        >
+          LOG IN
+        </button>
+        <button
+          class="h-[42px] bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center m-[10px] upload-btn hidden"
+          onclick="
+            document.getElementById('upload-box').classList.remove('hidden');
+            document
+              .getElementById('upload-background')
+              .classList.remove('hidden');
+          "
+        >
+          <span class="material-icons-outlined">upload</span>
+        </button>
+        <div id="quota-container" style="display: none">
           <span id="quota-text">250 MB of 500 MB</span>
           <div id="progress-bar">
             <div id="progress">50%</div>
@@ -22,79 +99,324 @@
       </div>
     </div>
 
-    <div class="container"> <!-- Code input -->
+    <div class="text-center container">
+      <!-- Code input -->
       <form id="downloadForm">
-        <div class="input-box">
-          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
-          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
-          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
-          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
-          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
-          <input type="text" class="code-input" maxlength="1" required autocomplete="off" spellcheck="false"/>
+        <div
+          class="bg-input p-[30px_40px] rounded-xl shadow-[inset_-2px_-2px_5px_rgba(0,0,0,0.2),inset_2px_2px_5px_rgba(255,255,255,0.5)] mb-5 flex justify-center gap-[10px] input-box"
+        >
+          <input
+            type="text"
+            class="bg-transparent border-none outline-none font-inter text-[28px] w-10 h-12 text-center text-[#333] border-b-2 border-[#333] transition-colors code-input"
+            maxlength="1"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <input
+            type="text"
+            class="bg-transparent border-none outline-none font-inter text-[28px] w-10 h-12 text-center text-[#333] border-b-2 border-[#333] transition-colors code-input"
+            maxlength="1"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <input
+            type="text"
+            class="bg-transparent border-none outline-none font-inter text-[28px] w-10 h-12 text-center text-[#333] border-b-2 border-[#333] transition-colors code-input"
+            maxlength="1"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <input
+            type="text"
+            class="bg-transparent border-none outline-none font-inter text-[28px] w-10 h-12 text-center text-[#333] border-b-2 border-[#333] transition-colors code-input"
+            maxlength="1"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <input
+            type="text"
+            class="bg-transparent border-none outline-none font-inter text-[28px] w-10 h-12 text-center text-[#333] border-b-2 border-[#333] transition-colors code-input"
+            maxlength="1"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <input
+            type="text"
+            class="bg-transparent border-none outline-none font-inter text-[28px] w-10 h-12 text-center text-[#333] border-b-2 border-[#333] transition-colors code-input"
+            maxlength="1"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          />
         </div>
-        <button type="submit" class="download-btn">Download</button>
+        <button
+          type="submit"
+          class="bg-secondary-button border-none px-10 py-[15px] rounded-xl text-[22px] font-red-hat cursor-pointer transition-transform transition-colors hover:opacity-90 active:scale-95 download-btn"
+        >
+          Download
+        </button>
       </form>
     </div>
 
-    <div class="background hidden" id="upload-background" onclick=document.getElementById("upload-box").classList.add("hidden");document.getElementById("upload-background").classList.add("hidden");> <!-- Upload modal -->
-      <div class="modal hidden" id="upload-box" onclick=event.stopPropagation();>
-        <button class="close-btn" id="upload-close-btn" onclick=document.getElementById("upload-box").classList.add("hidden");document.getElementById("upload-background").classList.add("hidden");><span class="material-icons-outlined">close</span></button>
-        <div class="drop_zone" id="drop_zone">
+    <div
+      class="flex justify-center items-center w-full h-full absolute top-0 left-0 bg-transparent background hidden"
+      id="upload-background"
+      onclick="
+        document.getElementById('upload-box').classList.add('hidden');
+        document.getElementById('upload-background').classList.add('hidden');
+      "
+    >
+      <!-- Upload modal -->
+      <div
+        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center flex-col m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all modal hidden"
+        id="upload-box"
+        onclick="event.stopPropagation()"
+      >
+        <button
+          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn"
+          id="upload-close-btn"
+          onclick="
+            document.getElementById('upload-box').classList.add('hidden');
+            document
+              .getElementById('upload-background')
+              .classList.add('hidden');
+          "
+        >
+          <span class="material-icons-outlined">close</span>
+        </button>
+        <div
+          class="font-inter text-2xl relative h-[80%] w-[80%] flex items-center justify-center m-[100px_auto] rounded-[28px] border-0 transition-all drop_zone"
+          id="drop_zone"
+        >
           <p>
             <span style="color: #5ef78c">Drop</span> or
             <span style="color: #4c73f0">Select</span> files here
           </p>
         </div>
         <div id="upload-status-box" class="hidden" style="display: none">
-          <span id="upload-status-symbol" class="material-icons-outlined hidden">error</span>
-          <span id="upload-status-text" class="hidden">Error: File too large!</span>
-          <span id="filecode-display" class="hidden" style="display: none">sguvae</span>
+          <span id="upload-status-symbol" class="material-icons-outlined hidden"
+            >error</span
+          >
+          <span id="upload-status-text" class="hidden"
+            >Error: File too large!</span
+          >
+          <span id="filecode-display" class="hidden" style="display: none"
+            >sguvae</span
+          >
           <span id="or" style="display: none">or</span>
-          <div id="link-display" class="hidden" style="display: none"><span id="link-text" style="display: inline"></span><span class="material-icons-outlined" id="copy-icon" style="display: inline">content_copy</span></div>
+          <div id="link-display" class="hidden" style="display: none">
+            <span id="link-text" style="display: inline"></span
+            ><span
+              class="material-icons-outlined"
+              id="copy-icon"
+              style="display: inline"
+              >content_copy</span
+            >
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="background hidden" id="hambruber-background" onclick=switchHamburber()> <!-- Hamburger menu -->
-      <div class="hamburber-menu hidden" id="hamburber-menu" >
-        <button class="burber-item hidden white" id="admin-dash"><span class="material-icons-outlined">dashboard</span>Admin dashboard</button>
-        <button class="burber-item hidden white" id="my-files" onclick=document.getElementById('my-files-background').classList.remove('hidden')><span class="material-icons-outlined">folder</span> My files</button>
-        <button class="burber-item hidden white" id="change-password" onclick=document.getElementById('change-password-background').classList.remove('hidden')><span class="material-icons-outlined">password</span> Change password</button>
-        <hr id="hamburber-separator" class="hidden">
-        <button class="burber-item hidden white" id="logout-menu-item" onclick=logout()><span class="material-icons-outlined">logout</span>Logout</button>
+    <div
+      class="flex justify-center items-center w-full h-full absolute top-0 left-0 bg-transparent background hidden"
+      id="hambruber-background"
+      onclick="switchHamburber()"
+    >
+      <!-- Hamburger menu -->
+      <div
+        class="z-10 absolute top-[90px] right-5 p-[10px] flex flex-col justify-center items-center bg-[hsl(0,0%,12%)] rounded-lg border border-[#a1a1a1] transition-all backdrop-blur-[20px] hamburber-menu hidden"
+        id="hamburber-menu"
+      >
+        <button
+          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] burber-item hidden white"
+          id="admin-dash"
+        >
+          <span class="material-icons-outlined">dashboard</span>Admin dashboard
+        </button>
+        <button
+          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] burber-item hidden white"
+          id="my-files"
+          onclick="
+            document
+              .getElementById('my-files-background')
+              .classList.remove('hidden')
+          "
+        >
+          <span class="material-icons-outlined">folder</span> My files
+        </button>
+        <button
+          class="h-[42px] w-[200px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] burber-item hidden white"
+          id="change-password"
+          onclick="
+            document
+              .getElementById('change-password-background')
+              .classList.remove('hidden')
+          "
+        >
+          <span class="material-icons-outlined">password</span> Change password
+        </button>
+        <hr id="hamburber-separator" class="hidden" />
+        <button
+          class="h-[42px] w-[200px] border border-error bg-[hsla(11,91%,67%,0.5)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[hsla(11,91%,67%,0.45)] hover:drop-shadow-[0px_0px_10px_hsla(11,91%,67%,0.8)] burber-item hidden white"
+          id="logout-menu-item"
+          onclick="logout()"
+        >
+          <span class="material-icons-outlined">logout</span>Logout
+        </button>
       </div>
     </div>
 
-    <div class="background hidden" id="login-background" onclick=document.getElementById("login-box").classList.add("hidden");document.getElementById("login-background").classList.add("hidden");>
-      <div class="modal hidden" id="login-box" onclick=event.stopPropagation();>
-        <button class="close-btn" onclick=document.getElementById("login-box").classList.add("hidden");document.getElementById("login-background").classList.add("hidden");><span class="material-icons-outlined">close</span></button>
-        <form id="loginForm">
-          <input type="text" id="username" name="username" aria-label="Username" placeholder="Username" class="form-input" required> <br>
-          <input type="password" id="password" name="password" aria-label="Password" placeholder="Password" class="form-input" required> <br>
-          <button type="submit" class="submit-button" id="action-button">Login</button>
-          <label id="login-error-label"></label>
+    <div
+      class="flex justify-center items-center w-full h-full absolute top-0 left-0 bg-transparent background hidden"
+      id="login-background"
+      onclick="
+        document.getElementById('login-box').classList.add('hidden');
+        document.getElementById('login-background').classList.add('hidden');
+      "
+    >
+      <div
+        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all modal hidden"
+        id="login-box"
+        onclick="event.stopPropagation()"
+      >
+        <button
+          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn"
+          onclick="
+            document.getElementById('login-box').classList.add('hidden');
+            document.getElementById('login-background').classList.add('hidden');
+          "
+        >
+          <span class="material-icons-outlined">close</span>
+        </button>
+        <form id="loginForm" class="flex flex-col">
+          <input
+            type="text"
+            id="username"
+            name="username"
+            aria-label="Username"
+            placeholder="Username"
+            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input"
+            required
+          />
+          <br />
+          <input
+            type="password"
+            id="password"
+            name="password"
+            aria-label="Password"
+            placeholder="Password"
+            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input"
+            required
+          />
+          <br />
+          <button
+            type="submit"
+            class="min-w-[300px] p-[15px] mt-[15px] rounded-[20px] border-none text-xl cursor-pointer bg-primary-button font-red-hat transition-colors submit-button"
+            id="action-button"
+          >
+            Login
+          </button>
+          <label id="login-error-label" class="font-red-hat text-error"></label>
         </form>
       </div>
     </div>
 
-    <div class="background hidden" id="change-password-background" onclick="document.getElementById('change-password-background').classList.add('hidden')">
-        <div class="modal" id="change-password-box" onclick=event.stopPropagation();>
-          <button class="close-btn" id="change-password-close-btn" onclick=document.getElementById("change-password-background").classList.add("hidden");><span class="material-icons-outlined">close</span></button>
-          <form id="changePasswordForm" style="display: flex;flex-direction: column;">
-            <input type="password" id="old-password" name="old-password" aria-label="Old password" placeholder="Old password" class="form-input" required> <br>
-            <input type="password" id="new-password" name="new-password" aria-label="New password" placeholder="New password" class="form-input" required> <br>
-            <button type="submit" class="submit-button" id="change-password-button">Login</button>
-          </form>
-          <span id="change-password-label" class="yellow-working" style="margin: 30px">
-            WARNING: This will log out all logged in instances!
-          </span>
-        </div>
+    <div
+      class="flex justify-center items-center w-full h-full absolute top-0 left-0 bg-transparent background hidden"
+      id="change-password-background"
+      onclick="
+        document
+          .getElementById('change-password-background')
+          .classList.add('hidden')
+      "
+    >
+      <div
+        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all modal"
+        id="change-password-box"
+        onclick="event.stopPropagation()"
+      >
+        <button
+          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn"
+          id="change-password-close-btn"
+          onclick="
+            document
+              .getElementById('change-password-background')
+              .classList.add('hidden')
+          "
+        >
+          <span class="material-icons-outlined">close</span>
+        </button>
+        <form id="changePasswordForm" class="flex flex-col">
+          <input
+            type="password"
+            id="old-password"
+            name="old-password"
+            aria-label="Old password"
+            placeholder="Old password"
+            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input"
+            required
+          />
+          <br />
+          <input
+            type="password"
+            id="new-password"
+            name="new-password"
+            aria-label="New password"
+            placeholder="New password"
+            class="min-w-[300px] p-[15px] m-[10px_0] rounded-[20px] border-none outline-none text-xl bg-input font-red-hat form-input"
+            required
+          />
+          <br />
+          <button
+            type="submit"
+            class="min-w-[300px] p-[15px] mt-[15px] rounded-[20px] border-none text-xl cursor-pointer bg-primary-button font-red-hat transition-colors submit-button"
+            id="change-password-button"
+          >
+            Login
+          </button>
+        </form>
+        <span
+          id="change-password-label"
+          class="text-danger drop-shadow-[0px_0px_100px_hsl(51,91%,67%)]"
+          style="margin: 30px"
+        >
+          WARNING: This will log out all logged in instances!
+        </span>
+      </div>
     </div>
 
-    <div class="background hidden" id="my-files-background" onclick=document.getElementById('my-files-background').classList.add('hidden')>
-      <div class="modal" id="my-files-box" onclick=event.stopPropagation();>
-        <button class="close-btn" id="my-files-close-btn" onclick=document.getElementById("my-files-background").classList.add("hidden");><span class="material-icons-outlined">close</span></button>
-        <table id="my-files-table">
+    <div
+      class="flex justify-center items-center w-full h-full absolute top-0 left-0 bg-transparent background hidden"
+      id="my-files-background"
+      onclick="
+        document.getElementById('my-files-background').classList.add('hidden')
+      "
+    >
+      <div
+        class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] w-[calc(100vw-30vw)] flex items-center justify-center m-[100px_auto] rounded-[28px] border-3 border-[#a1a1a1] transition-all modal"
+        id="my-files-box"
+        onclick="event.stopPropagation()"
+      >
+        <button
+          class="absolute top-5 h-[42px] right-5 bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center z-10 close-btn"
+          id="my-files-close-btn"
+          onclick="
+            document
+              .getElementById('my-files-background')
+              .classList.add('hidden')
+          "
+        >
+          <span class="material-icons-outlined">close</span>
+        </button>
+        <table
+          id="my-files-table"
+          class="w-full rounded-[28px] h-full mt-20 border border-[#444] border-collapse overflow-x-scroll overflow-y-scroll table-fixed bg-black/10 block"
+        >
           <tr>
             <th>Code</th>
             <th>Filename</th>
