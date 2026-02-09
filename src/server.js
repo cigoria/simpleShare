@@ -235,17 +235,17 @@ async function calculateRemainFromQuota(user_id) {
     let result = await conn.query("SELECT quota_in_bytes FROM users WHERE id = ?", [user_id]);
     if (result.length === 0) return 0;
 
-    let quota = result[0].quota_in_bytes;
-    if (quota == 0) return null;
+    let quota = BigInt(result[0].quota_in_bytes);
+    if (quota == 0n) return null;
 
     let used_res = await conn.query(
         "SELECT SUM(file_size_in_bytes) AS total_used FROM file_index WHERE user_id = ?",
         [user_id]
     );
 
-    let used_up = used_res[0].total_used || 0;
+    let used_up = BigInt(used_res[0].total_used || 0);
 
-    return quota - used_up;
+    return Number(quota - used_up);
   } finally {
     if (conn) conn.release();
   }
@@ -489,7 +489,10 @@ app.post("/quota", async (req, res) => {
   let total_quota = await getTotalQuota(user_id);
   let used_quota = await getUsedQuota(user_id);
 
-  return res.status(200).json({"total":total_quota,"used":used_quota});
+  return res.status(200).json({
+    "total": total_quota ? Number(total_quota) : total_quota,
+    "used": used_quota.total_used ? Number(used_quota.total_used) : used_quota.total_used
+  });
 
 })
 

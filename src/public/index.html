@@ -67,7 +67,7 @@
         class="absolute top-5 right-5 flex justify-end items-end flex-row-reverse"
       >
         <button
-          class="h-[42px] bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer tracking-[1px] text-center m-[10px] menu-btn hidden"
+          class="h-[42px] bg-primary-button text-black border-none px-[10px] py-[10px] rounded-lg text-lg cursor-pointer hover:cursor-pointer active:cursor-pointer focus:cursor-pointer tracking-[1px] text-center m-[10px] menu-btn hidden"
           onclick="switchHamburber()"
         >
           <span class="material-icons-outlined">menu</span>
@@ -213,7 +213,7 @@
             <span style="color: #4c73f0">Select</span> files here
           </p>
         </div>
-        <div id="upload-status-box" class="hidden w-full max-w-2xl mx-auto p-8">
+        <div id="upload-status-box" class="hidden w-full max-w-2xl mx-auto p-8 flex flex-col items-center justify-center">
           <div class="text-center mb-8">
             <span id="upload-status-symbol" class="material-icons-outlined hidden text-4xl mb-4"
               >error</span
@@ -227,16 +227,11 @@
             <div class="text-center p-6 bg-black/20 rounded-xl border border-[#444]">
               <p class="text-sm text-gray-400 mb-2 font-inter">Your file code:</p>
               <div class="flex items-center justify-center gap-3">
-                <span id="filecode-display" class="text-3xl font-red-hat font-bold text-primary-button"></span>
-                <button id="copy-code-btn" class="p-2 rounded-lg hover:bg-black/20 transition-colors group relative" title="Click to copy">
-                  <span class="material-icons-outlined text-xl text-gray-400 group-hover:text-white cursor-pointer">content_copy</span>
+                <span id="filecode-display" class="text-3xl font-red-hat font-bold text-primary-button cursor-pointer group relative" title="Click to copy">
                   <span class="tooltip absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Click to copy</span>
-                </button>
+                </span>
               </div>
-            </div>
-            
-            <div class="text-center">
-              <p class="text-sm text-gray-400 mb-3 font-inter">or share via direct link:</p>
+              <p class="text-sm text-gray-400 mb-3 font-inter mt-6">or share via direct link:</p>
               <div class="flex items-center gap-3 p-4 bg-black/20 rounded-xl border border-[#444]">
                 <span id="link-text" class="flex-1 font-red-hat text-sm truncate cursor-pointer hover:text-primary-button transition-colors"></span>
                 <button id="copy-link-btn" class="p-2 rounded-lg hover:bg-black/20 transition-colors group relative" title="Click to copy">
@@ -251,7 +246,7 @@
     </div>
 
     <div
-      class="flex justify-center items-center w-full h-full absolute top-0 left-0 bg-transparent background hidden"
+      class="flex justify-center items-center w-full h-full absolute top-0 left-0 bg-transparent background hidden cursor-pointer"
       id="hambruber-background"
       onclick="switchHamburber()"
     >

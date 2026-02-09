@@ -360,11 +360,22 @@ async function handleFiles(files) {
         document.getElementById("link-text").innerText = full_url;
         
         // Copy code functionality
-        document.getElementById("copy-code-btn").addEventListener("click", async (e) => {
+        document.getElementById("filecode-display").addEventListener("click", async (e) => {
             e.preventDefault();
             try {
                 await navigator.clipboard.writeText(response_data.code);
-                showCopyFeedback(e.target.closest('button'), 'Copied!');
+                
+                // Visual feedback
+                const element = e.target;
+                const originalColor = element.style.color;
+                element.style.color = '#5ef78c';
+                element.style.transform = 'scale(1.1)';
+                element.style.transition = 'all 0.3s ease';
+                
+                setTimeout(() => {
+                    element.style.color = originalColor;
+                    element.style.transform = 'scale(1)';
+                }, 800);
             } catch (err) {
                 console.error('Failed to copy:', err);
             }
