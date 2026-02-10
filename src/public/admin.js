@@ -217,22 +217,32 @@ function displayAllFiles(files) {
 function createFileRow(file) {
     const date = new Date(file.date_added).toLocaleDateString();
     
+    // Decode filename to handle UTF-8 properly (same fix as in main app)
+    let decodedName = file.originalname;
+    try {
+      // If name is double-encoded, decode it
+      decodedName = decodeURIComponent(escape(file.originalname));
+    } catch (e) {
+      // If decoding fails, use original name
+      decodedName = file.originalname;
+    }
+    
     return `
         <tr class="border-b border-[#444] hover:bg-black/10 transition-colors">
             <td class="px-4 py-3 text-white font-mono">${file.id}</td>
-            <td class="px-4 py-3 text-white">${file.originalname}</td>
+            <td class="px-4 py-3 text-white">${decodedName}</td>
             <td class="px-4 py-3 text-white">${file.username}</td>
             <td class="px-4 py-3 text-white">${formatBytes(file.size)}</td>
             <td class="px-4 py-3 text-white">${file.mimetype}</td>
             <td class="px-4 py-3 text-white">${date}</td>
-            <td class="px-4 py-3 text-center">
+            <td class="px-4 py-3 text-center flex items-center justify-center gap-2">
                 <button onclick="downloadFile('${file.id}')" 
-                        class="bg-secondary-button text-black px-3 py-1 rounded text-sm hover:scale-105 transition-transform mr-2">
-                    Download
+                        class="bg-secondary-button text-black p-2 rounded text-sm hover:scale-105 transition-transform">
+                    <span class="material-icons-outlined text-base">download</span>
                 </button>
                 <button onclick="deleteFile('${file.id}')" 
-                        class="bg-error text-white px-3 py-1 rounded text-sm hover:scale-105 transition-transform">
-                    Delete
+                        class="bg-error text-white p-2 rounded text-sm hover:scale-105 transition-transform">
+                    <span class="material-icons-outlined text-base">delete</span>
                 </button>
             </td>
         </tr>
@@ -304,7 +314,36 @@ async function loadUserFiles(userId, username) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${files.map(file => createFileRow(file)).join('')}
+                                    ${files.map(file => {
+                                        // Decode filename to handle UTF-8 properly (same fix as in main app)
+                                        let decodedName = file.originalname;
+                                        try {
+                                          // If name is double-encoded, decode it
+                                          decodedName = decodeURIComponent(escape(file.originalname));
+                                        } catch (e) {
+                                          // If decoding fails, use original name
+                                          decodedName = file.originalname;
+                                        }
+                                        
+                                        return `
+                                        <tr class="border-b border-[#444] hover:bg-black/10 transition-colors">
+                                            <td class="px-4 py-3 text-white font-mono">${file.id}</td>
+                                            <td class="px-4 py-3 text-white">${decodedName}</td>
+                                            <td class="px-4 py-3 text-white">${formatBytes(file.size)}</td>
+                                            <td class="px-4 py-3 text-white">${file.mimetype}</td>
+                                            <td class="px-4 py-3 text-white">${new Date(file.date_added).toLocaleDateString()}</td>
+                                            <td class="px-4 py-3 text-center flex items-center justify-center gap-2">
+                                                <button onclick="downloadFile('${file.id}')" 
+                                                        class="bg-secondary-button text-black p-2 rounded text-sm hover:scale-105 transition-transform">
+                                                    <span class="material-icons-outlined text-base">download</span>
+                                                </button>
+                                                <button onclick="deleteFile('${file.id}')" 
+                                                        class="bg-error text-white p-2 rounded text-sm hover:scale-105 transition-transform">
+                                                    <span class="material-icons-outlined text-base">delete</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `;}).join('')}
                                 </tbody>
                             </table>
                         </div>
