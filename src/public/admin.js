@@ -363,33 +363,258 @@ async function confirmDeleteUser(userId, username) {
 }
 
 function changeUserPassword(userId, username) {
-  const adminPassword = prompt(`Enter your admin password to change password for user "${username}":`);
-  if (!adminPassword) return;
-
-  const newPassword = prompt(`Enter new password for user "${username}" (min 6 characters):`);
-  if (!newPassword) return;
-
-  if (newPassword.length < 6) {
-    showError("Password must be at least 6 characters long");
-    return;
-  }
-
-  changePassword(userId, newPassword, adminPassword);
+  // Create password change modal
+  const modal = document.createElement("div");
+  modal.className =
+    "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
+  modal.innerHTML = `
+        <div class="bg-main border border-[#444] rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-white mb-4">Change Password</h3>
+            <p class="text-gray-300 mb-4">
+                Change password for user <span class="text-primary-button font-bold">${username}</span>
+            </p>
+            
+            <div class="mb-4">
+                <label class="block text-white text-sm font-medium mb-2">
+                    Enter your admin password:
+                </label>
+                <input type="password" id="adminPassword" 
+                       class="w-full px-3 py-2 bg-black/30 border border-[#444] rounded text-white focus:border-primary-button focus:outline-none"
+                       placeholder="Enter your admin password">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-white text-sm font-medium mb-2">
+                    New password (min 6 characters):
+                </label>
+                <input type="password" id="newPassword" 
+                       class="w-full px-3 py-2 bg-black/30 border border-[#444] rounded text-white focus:border-primary-button focus:outline-none"
+                       placeholder="Enter new password">
+            </div>
+            
+            <div class="flex gap-3 justify-end">
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmPasswordChange('${userId}', '${username}')" 
+                        class="px-4 py-2 bg-primary-button text-black rounded hover:opacity-90 transition-opacity">
+                    Change Password
+                </button>
+            </div>
+        </div>
+    `;
+  document.body.appendChild(modal);
+  
+  // Focus on admin password field
+  document.getElementById('adminPassword').focus();
 }
 
 function changeUsername(userId, currentUsername) {
-  const adminPassword = prompt(`Enter your admin password to change username for user "${currentUsername}":`);
-  if (!adminPassword) return;
+  // Create username change modal
+  const modal = document.createElement("div");
+  modal.className =
+    "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
+  modal.innerHTML = `
+        <div class="bg-main border border-[#444] rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-white mb-4">Change Username</h3>
+            <p class="text-gray-300 mb-4">
+                Change username for user <span class="text-primary-button font-bold">${currentUsername}</span>
+            </p>
+            
+            <div class="mb-4">
+                <label class="block text-white text-sm font-medium mb-2">
+                    Enter your admin password:
+                </label>
+                <input type="password" id="adminPassword" 
+                       class="w-full px-3 py-2 bg-black/30 border border-[#444] rounded text-white focus:border-primary-button focus:outline-none"
+                       placeholder="Enter your admin password">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-white text-sm font-medium mb-2">
+                    New username (min 3 characters):
+                </label>
+                <input type="text" id="newUsername" 
+                       class="w-full px-3 py-2 bg-black/30 border border-[#444] rounded text-white focus:border-primary-button focus:outline-none"
+                       placeholder="Enter new username">
+            </div>
+            
+            <div class="flex gap-3 justify-end">
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmUsernameChange('${userId}', '${currentUsername}')" 
+                        class="px-4 py-2 bg-secondary-button text-black rounded hover:opacity-90 transition-opacity">
+                    Change Username
+                </button>
+            </div>
+        </div>
+    `;
+  document.body.appendChild(modal);
+  
+  // Focus on admin password field
+  document.getElementById('adminPassword').focus();
+}
 
-  const newUsername = prompt(`Enter new username for user "${currentUsername}" (min 3 characters):`);
-  if (!newUsername) return;
+function changeQuota(userId, username, currentQuota) {
+  alert('changeQuota called!');
+  console.log('changeQuota called with:', { userId, username, currentQuota });
+  const currentQuotaText = currentQuota === 0 ? "Unlimited" : formatBytes(currentQuota);
+  
+  // Create quota change modal
+  const modal = document.createElement("div");
+  modal.className =
+    "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
+  modal.innerHTML = `
+        <div class="bg-main border border-[#444] rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-white mb-4">Change Quota Confirmation</h3>
+            <p class="text-gray-300 mb-4">
+                Are you sure you want to change quota for user <span class="text-yellow-500 font-bold">${username}</span>?
+            </p>
+            <ul class="text-gray-300 mb-4 list-disc list-inside">
+                <li>Current quota: <span class="font-mono">${currentQuotaText}</span></li>
+                <li>This will affect the user's upload limits</li>
+                <li>If quota is exceeded, user cannot upload new files</li>
+            </ul>
+            <p class="text-yellow-500 font-semibold mb-4">Please verify the new quota carefully!</p>
+            
+            <div class="mb-4">
+                <label class="block text-white text-sm font-medium mb-2">
+                    Enter your admin password to confirm:
+                </label>
+                <input type="password" id="adminPassword" 
+                       class="w-full px-3 py-2 bg-black/30 border border-[#444] rounded text-white focus:border-primary-button focus:outline-none"
+                       placeholder="Enter your admin password">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-white text-sm font-medium mb-2">
+                    New quota:
+                </label>
+                <div class="flex gap-2">
+                    <input type="number" id="newQuotaValue" 
+                           class="flex-1 px-3 py-2 bg-black/30 border border-[#444] rounded text-white focus:border-primary-button focus:outline-none"
+                           placeholder="Enter quota value" min="0" step="1">
+                    <select id="newQuotaUnit" 
+                            class="px-3 py-2 bg-black/30 border border-[#444] rounded text-white focus:border-primary-button focus:outline-none">
+                        <option value="0">Unlimited</option>
+                        <option value="1024">KB</option>
+                        <option value="1048576">MB</option>
+                        <option value="1073741824">GB</option>
+                    </select>
+                </div>
+                <p class="text-gray-400 text-xs mt-1">
+                    Select "Unlimited" for no quota limit, or choose value + unit
+                </p>
+            </div>
+            
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeQuotaModal()" 
+                        class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmQuotaChange('${userId}', '${username}')" 
+                        class="px-4 py-2 bg-yellow-500 text-black rounded hover:bg-yellow-600 transition-colors">
+                    Change Quota
+                </button>
+            </div>
+        </div>
+    `;
+  document.body.appendChild(modal);
+  console.log('Quota modal appended to body');
+  
+  // Focus on admin password field
+  document.getElementById('adminPassword').focus();
+  console.log('Quota modal admin password field focused');
+}
 
-  if (newUsername.length < 3) {
-    showError("Username must be at least 3 characters long");
+function confirmPasswordChange(userId, username) {
+  const adminPassword = document.getElementById('adminPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  
+  if (!adminPassword || !newPassword) {
+    showError('Please fill in all fields');
     return;
   }
+  
+  if (newPassword.length < 6) {
+    showError('Password must be at least 6 characters long');
+    return;
+  }
+  
+  // Close modal
+  const modals = document.querySelectorAll(".fixed.inset-0");
+  modals.forEach(modal => modal.remove());
+  
+  // Make API call
+  changePassword(userId, newPassword, adminPassword);
+}
 
+function confirmUsernameChange(userId, currentUsername) {
+  const adminPassword = document.getElementById('adminPassword').value;
+  const newUsername = document.getElementById('newUsername').value;
+  
+  if (!adminPassword || !newUsername) {
+    showError('Please fill in all fields');
+    return;
+  }
+  
+  if (newUsername.length < 3) {
+    showError('Username must be at least 3 characters long');
+    return;
+  }
+  
+  // Close modal
+  const modals = document.querySelectorAll(".fixed.inset-0");
+  modals.forEach(modal => modal.remove());
+  
+  // Make API call
   updateUsername(userId, newUsername, adminPassword);
+}
+
+function closeQuotaModal() {
+  const modals = document.querySelectorAll(".fixed.inset-0");
+  modals.forEach(modal => modal.remove());
+}
+
+function confirmQuotaChange(userId, username) {
+  const adminPassword = document.getElementById('adminPassword').value;
+  const quotaValue = document.getElementById('newQuotaValue').value;
+  const quotaUnit = document.getElementById('newQuotaUnit').value;
+  
+  if (!adminPassword) {
+    showError('Please enter your admin password');
+    return;
+  }
+  
+  let newQuota = 0;
+  
+  if (quotaUnit === '0') {
+    // Unlimited quota
+    newQuota = 0;
+  } else {
+    if (!quotaValue || quotaValue === '') {
+      showError('Please enter a quota value');
+      return;
+    }
+    
+    const value = parseFloat(quotaValue);
+    if (isNaN(value) || value < 0) {
+      showError('Quota value must be a non-negative number');
+      return;
+    }
+    
+    // Calculate bytes: value * unit multiplier
+    newQuota = Math.floor(value * parseInt(quotaUnit));
+  }
+  
+  // Close modal
+  closeQuotaModal();
+  
+  // Make API call
+  updateQuota(userId, newQuota, adminPassword);
 }
 
 async function changePassword(userId, newPassword, adminPassword) {
