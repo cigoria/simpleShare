@@ -307,6 +307,17 @@ async function calculateRemainFromQuota(user_id) {
   }
 }
 
+async function countAdmins() {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const result = await conn.query("SELECT COUNT(*) as admin_count FROM users WHERE is_admin = 1");
+    return result[0].admin_count;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
 async function prepareUploadContext(req, res, next) {
   const code = await generateUniqueFileID(6);
   req.fileCode = code;
@@ -1105,12 +1116,99 @@ app.post("/admin/changeQuota", async (req, res) => {
   }
 });
 
+app.post("/admin/changeAdminStatus", async (req, res) => {
+  // Set proper content type for JSON responses
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  
+  if (!req.headers.authorization) {
+    return res.status(401).json({ error: "Authorization required" });
+  }
+
+  const { userId, isAdmin, adminPassword } = req.body;
+
+  if (!userId || isAdmin === undefined || !adminPassword) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    // Verify admin permissions and password
+    const adminToken = req.headers.authorization;
+    const adminUserId = await validateToken(adminToken);
+
+    if (adminUserId === false) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    const adminPerms = await getPermissions(adminToken);
+    if (adminPerms !== "admin") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    // Get admin user data to verify password
+    const adminData = await conn.query("SELECT * FROM users WHERE id = ?", [
+      adminUserId,
+    ]);
+    if (adminData.length === 0) {
+      return res.status(401).json({ error: "Admin user not found" });
+    }
+
+    // Verify admin password
+    const isPasswordValid = await bcrypt.compare(
+      adminPassword,
+      adminData[0].password_hash,
+    );
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    // Check if target user exists
+    const targetUser = await conn.query("SELECT * FROM users WHERE id = ?", [userId]);
+    if (targetUser.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Prevent admin from changing their own admin status
+    if (userId === adminUserId.toString()) {
+      return res.status(400).json({ error: "Cannot change your own admin status" });
+    }
+
+    // If trying to remove admin status, check if this would leave zero admins
+    if (!isAdmin && targetUser[0].is_admin === 1) {
+      const adminCount = await countAdmins();
+      if (adminCount <= 1) {
+        return res.status(400).json({ error: "Cannot remove admin status: there must be at least one admin on the server" });
+      }
+    }
+
+    // Update user admin status
+    await conn.query("UPDATE users SET is_admin = ? WHERE id = ?", [
+      isAdmin ? 1 : 0,
+      userId,
+    ]);
+
+    const action = isAdmin ? "promoted to admin" : "demoted to user";
+    return res.status(200).json({ message: `User ${action} successfully` });
+  } catch (error) {
+    console.error("Error changing admin status:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "./public/admin.html"));
 });
 
 app.use("/", (req, res, next) => {
-  res.sendFile(path.join(__dirname, "./public/index.html"));
+  if (req.method === "GET") {
+    res.sendFile(path.join(__dirname, "./public/index.html"));
+  } else {
+    next();
+  }
 });
 
 // Generic

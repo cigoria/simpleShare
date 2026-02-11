@@ -152,6 +152,11 @@ function createUserRow(user) {
             <td class="px-4 py-3 text-white">${createdDate}</td>
             <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-2">
+                    <button onclick="toggleAdminStatus('${user.user_id}', '${user.username}', ${user.is_admin})" 
+                            class="bg-purple-500 text-white w-10 h-10 rounded flex items-center justify-center hover:scale-105 transition-transform" 
+                            title="Toggle Admin Status">
+                        <span class="material-icons text-sm">${user.is_admin ? 'admin_panel_settings' : 'person_add'}</span>
+                    </button>
                     <button onclick="changeUserPassword('${user.user_id}', '${user.username}')" 
                             class="bg-primary-button text-black w-10 h-10 rounded flex items-center justify-center hover:scale-105 transition-transform" 
                             title="Change Password">
@@ -273,6 +278,113 @@ function createFileRow(file) {
             </td>
         </tr>
     `;
+}
+
+function toggleAdminStatus(userId, username, currentIsAdmin) {
+  const action = currentIsAdmin ? "remove admin status from" : "promote";
+  const actionText = currentIsAdmin ? "Remove Admin Status" : "Promote to Admin";
+  const warningText = currentIsAdmin ? 
+    "Removing admin status will revoke all administrative privileges from this user." :
+    "Promoting this user will grant them full administrative privileges including user management and file deletion.";
+  
+  // Create admin status change modal
+  const modal = document.createElement("div");
+  modal.className =
+    "fixed inset-0 bg-black/50 flex items-center justify-center z-50";
+  modal.innerHTML = `
+        <div class="bg-main border border-[#444] rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-white mb-4">${actionText} Confirmation</h3>
+            <p class="text-gray-300 mb-4">
+                Are you sure you want to ${action} user <span class="text-purple-400 font-bold">${username}</span>?
+            </p>
+            <div class="bg-black/30 border border-[#444] rounded p-3 mb-4">
+                <p class="text-gray-300 text-sm">${warningText}</p>
+                ${currentIsAdmin ? '<p class="text-yellow-500 text-sm mt-2">⚠️ Note: There must be at least one admin on the server at all times.</p>' : ''}
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-white text-sm font-medium mb-2">
+                    Enter your admin password to confirm:
+                </label>
+                <input type="password" id="adminPassword" 
+                       class="w-full px-3 py-2 bg-black/30 border border-[#444] rounded text-white focus:border-purple-400 focus:outline-none"
+                       placeholder="Enter your admin password">
+            </div>
+            
+            <div class="flex gap-3 justify-end">
+                <button onclick="this.closest('.fixed').remove()" 
+                        class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="confirmAdminStatusChange('${userId}', '${username}', ${!currentIsAdmin})" 
+                        class="px-4 py-2 ${currentIsAdmin ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-purple-500 hover:bg-purple-600'} text-white rounded transition-colors">
+                    ${actionText}
+                </button>
+            </div>
+        </div>
+    `;
+  document.body.appendChild(modal);
+  
+  // Focus on admin password field
+  document.getElementById('adminPassword').focus();
+}
+
+function confirmAdminStatusChange(userId, username, newIsAdmin) {
+  const adminPassword = document.getElementById('adminPassword').value;
+  
+  if (!adminPassword) {
+    showError('Please enter your admin password');
+    return;
+  }
+  
+  // Close modal
+  const modals = document.querySelectorAll(".fixed.inset-0");
+  modals.forEach(modal => modal.remove());
+  
+  // Make API call
+  updateAdminStatus(userId, newIsAdmin, adminPassword);
+}
+
+async function updateAdminStatus(userId, isAdmin, adminPassword) {
+  try {
+    const response = await fetch("/admin/changeAdminStatus", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authToken,
+      },
+      body: JSON.stringify({
+        userId,
+        isAdmin,
+        adminPassword,
+      }),
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response headers:", response.headers);
+
+    // Get response as text first to debug
+    const responseText = await response.text();
+    console.log("Response text:", responseText);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error("JSON parse error:", e);
+      throw new Error(`Invalid JSON response: ${responseText}`);
+    }
+
+    if (response.ok) {
+      showSuccess(data.message || "Admin status changed successfully");
+      loadUsers(); // Refresh users list
+    } else {
+      showError(data.error || "Failed to change admin status");
+    }
+  } catch (error) {
+    console.error("Error changing admin status:", error);
+    showError(`Failed to change admin status: ${error.message}`);
+  }
 }
 
 function deleteUser(userId, username) {
