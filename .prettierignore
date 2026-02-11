@@ -1,0 +1,10 @@
+node_modules/
+build/
+dist/
+uploads/
+.vscode/
+.env
+.idea/
+.DS_Store
+.directory
+*.log
