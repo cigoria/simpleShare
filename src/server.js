@@ -884,6 +884,227 @@ app.post("/admin/deleteUser", async (req, res) => {
   }
 });
 
+app.post("/admin/changePassword", async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.sendStatus(401);
+  }
+
+  const { userId, newPassword, adminPassword } = req.body;
+
+  if (!userId || !newPassword || !adminPassword) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters long" });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    // Verify admin permissions and password
+    const adminToken = req.headers.authorization;
+    const adminUserId = await validateToken(adminToken);
+
+    if (adminUserId === false) {
+      return res.sendStatus(401);
+    }
+
+    const adminPerms = await getPermissions(adminToken);
+    if (adminPerms !== "admin") {
+      return res.sendStatus(403);
+    }
+
+    // Get admin user data to verify password
+    const adminData = await conn.query("SELECT * FROM users WHERE id = ?", [
+      adminUserId,
+    ]);
+    if (adminData.length === 0) {
+      return res.status(401).json({ error: "Admin user not found" });
+    }
+
+    // Verify admin password
+    const isPasswordValid = await bcrypt.compare(
+      adminPassword,
+      adminData[0].password_hash,
+    );
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    // Check if target user exists
+    const targetUser = await conn.query("SELECT * FROM users WHERE id = ?", [userId]);
+    if (targetUser.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update user password
+    await conn.query("UPDATE users SET password_hash = ? WHERE id = ?", [
+      newPasswordHash,
+      userId,
+    ]);
+
+    return res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+app.post("/admin/changeUsername", async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.sendStatus(401);
+  }
+
+  const { userId, newUsername, adminPassword } = req.body;
+
+  if (!userId || !newUsername || !adminPassword) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  if (newUsername.length < 3) {
+    return res.status(400).json({ error: "Username must be at least 3 characters long" });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    // Verify admin permissions and password
+    const adminToken = req.headers.authorization;
+    const adminUserId = await validateToken(adminToken);
+
+    if (adminUserId === false) {
+      return res.sendStatus(401);
+    }
+
+    const adminPerms = await getPermissions(adminToken);
+    if (adminPerms !== "admin") {
+      return res.sendStatus(403);
+    }
+
+    // Get admin user data to verify password
+    const adminData = await conn.query("SELECT * FROM users WHERE id = ?", [
+      adminUserId,
+    ]);
+    if (adminData.length === 0) {
+      return res.status(401).json({ error: "Admin user not found" });
+    }
+
+    // Verify admin password
+    const isPasswordValid = await bcrypt.compare(
+      adminPassword,
+      adminData[0].password_hash,
+    );
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    // Check if target user exists
+    const targetUser = await conn.query("SELECT * FROM users WHERE id = ?", [userId]);
+    if (targetUser.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if new username is already taken
+    const existingUser = await conn.query("SELECT * FROM users WHERE username = ?", [newUsername]);
+    if (existingUser.length > 0) {
+      return res.status(400).json({ error: "Username already exists" });
+    }
+
+    // Update username
+    await conn.query("UPDATE users SET username = ? WHERE id = ?", [
+      newUsername,
+      userId,
+    ]);
+
+    return res.status(200).json({ message: "Username changed successfully" });
+  } catch (error) {
+    console.error("Error changing username:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+app.post("/admin/changeQuota", async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.sendStatus(401);
+  }
+
+  const { userId, newQuota, adminPassword } = req.body;
+
+  if (!userId || newQuota === undefined || !adminPassword) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  // Validate quota (must be a non-negative number, 0 means unlimited)
+  const quotaNum = parseInt(newQuota);
+  if (isNaN(quotaNum) || quotaNum < 0) {
+    return res.status(400).json({ error: "Quota must be a non-negative number (0 for unlimited)" });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    // Verify admin permissions and password
+    const adminToken = req.headers.authorization;
+    const adminUserId = await validateToken(adminToken);
+
+    if (adminUserId === false) {
+      return res.sendStatus(401);
+    }
+
+    const adminPerms = await getPermissions(adminToken);
+    if (adminPerms !== "admin") {
+      return res.sendStatus(403);
+    }
+
+    // Get admin user data to verify password
+    const adminData = await conn.query("SELECT * FROM users WHERE id = ?", [
+      adminUserId,
+    ]);
+    if (adminData.length === 0) {
+      return res.status(401).json({ error: "Admin user not found" });
+    }
+
+    // Verify admin password
+    const isPasswordValid = await bcrypt.compare(
+      adminPassword,
+      adminData[0].password_hash,
+    );
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid admin password" });
+    }
+
+    // Check if target user exists
+    const targetUser = await conn.query("SELECT * FROM users WHERE id = ?", [userId]);
+    if (targetUser.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Update user quota
+    await conn.query("UPDATE users SET quota_in_bytes = ? WHERE id = ?", [
+      quotaNum,
+      userId,
+    ]);
+
+    return res.status(200).json({ message: "Quota changed successfully" });
+  } catch (error) {
+    console.error("Error changing quota:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "./public/admin.html"));
 });

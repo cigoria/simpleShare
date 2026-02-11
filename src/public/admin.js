@@ -151,10 +151,28 @@ function createUserRow(user) {
             <td class="px-4 py-3 text-white">${fileCount}</td>
             <td class="px-4 py-3 text-white">${createdDate}</td>
             <td class="px-4 py-3 text-center">
-                <button onclick="deleteUser('${user.user_id}', '${user.username}')" 
-                        class="bg-error text-white px-3 py-1 rounded text-sm hover:scale-105 transition-transform">
-                    Delete User
-                </button>
+                <div class="flex items-center justify-center gap-2">
+                    <button onclick="changeUserPassword('${user.user_id}', '${user.username}')" 
+                            class="bg-primary-button text-black w-10 h-10 rounded flex items-center justify-center hover:scale-105 transition-transform" 
+                            title="Change Password">
+                        <span class="material-icons text-sm">lock</span>
+                    </button>
+                    <button onclick="changeUsername('${user.user_id}', '${user.username}')" 
+                            class="bg-secondary-button text-black w-10 h-10 rounded flex items-center justify-center hover:scale-105 transition-transform" 
+                            title="Change Username">
+                        <span class="material-icons text-sm">edit</span>
+                    </button>
+                    <button onclick="changeQuota('${user.user_id}', '${user.username}', ${user.quota})" 
+                            class="bg-yellow-500 text-black w-10 h-10 rounded flex items-center justify-center hover:scale-105 transition-transform" 
+                            title="Change Quota">
+                        <span class="material-icons text-sm">storage</span>
+                    </button>
+                    <button onclick="deleteUser('${user.user_id}', '${user.username}')" 
+                            class="bg-error text-white w-10 h-10 rounded flex items-center justify-center hover:scale-105 transition-transform" 
+                            title="Delete User">
+                        <span class="material-icons text-sm">delete</span>
+                    </button>
+                </div>
             </td>
         </tr>
     `;
@@ -243,11 +261,13 @@ function createFileRow(file) {
             <td class="px-4 py-3 text-white">${date}</td>
             <td class="px-4 py-3 text-center flex items-center justify-center gap-2">
                 <button onclick="downloadFile('${file.id}')" 
-                        class="bg-secondary-button text-black p-2 rounded text-sm hover:scale-105 transition-transform">
+                        class="bg-secondary-button text-black w-10 h-10 rounded flex items-center justify-center hover:scale-105 transition-transform" 
+                        title="Download File">
                     <span class="material-icons-outlined text-base">download</span>
                 </button>
                 <button onclick="deleteFile('${file.id}')" 
-                        class="bg-error text-white p-2 rounded text-sm hover:scale-105 transition-transform">
+                        class="bg-error text-white w-10 h-10 rounded flex items-center justify-center hover:scale-105 transition-transform" 
+                        title="Delete File">
                     <span class="material-icons-outlined text-base">delete</span>
                 </button>
             </td>
@@ -339,6 +359,140 @@ async function confirmDeleteUser(userId, username) {
   } catch (error) {
     console.error("Error deleting user:", error);
     showError("Failed to delete user");
+  }
+}
+
+function changeUserPassword(userId, username) {
+  const adminPassword = prompt(`Enter your admin password to change password for user "${username}":`);
+  if (!adminPassword) return;
+
+  const newPassword = prompt(`Enter new password for user "${username}" (min 6 characters):`);
+  if (!newPassword) return;
+
+  if (newPassword.length < 6) {
+    showError("Password must be at least 6 characters long");
+    return;
+  }
+
+  changePassword(userId, newPassword, adminPassword);
+}
+
+function changeUsername(userId, currentUsername) {
+  const adminPassword = prompt(`Enter your admin password to change username for user "${currentUsername}":`);
+  if (!adminPassword) return;
+
+  const newUsername = prompt(`Enter new username for user "${currentUsername}" (min 3 characters):`);
+  if (!newUsername) return;
+
+  if (newUsername.length < 3) {
+    showError("Username must be at least 3 characters long");
+    return;
+  }
+
+  updateUsername(userId, newUsername, adminPassword);
+}
+
+async function changePassword(userId, newPassword, adminPassword) {
+  try {
+    const response = await fetch("/admin/changePassword", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authToken,
+      },
+      body: JSON.stringify({
+        userId,
+        newPassword,
+        adminPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showSuccess("Password changed successfully");
+      loadUsers(); // Refresh the users list
+    } else {
+      showError(data.error || "Failed to change password");
+    }
+  } catch (error) {
+    console.error("Error changing password:", error);
+    showError("Failed to change password");
+  }
+}
+
+async function updateUsername(userId, newUsername, adminPassword) {
+  try {
+    const response = await fetch("/admin/changeUsername", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authToken,
+      },
+      body: JSON.stringify({
+        userId,
+        newUsername,
+        adminPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showSuccess("Username changed successfully");
+      loadUsers(); // Refresh the users list
+    } else {
+      showError(data.error || "Failed to change username");
+    }
+  } catch (error) {
+    console.error("Error changing username:", error);
+    showError("Failed to change username");
+  }
+}
+
+function changeQuota(userId, username, currentQuota) {
+  const adminPassword = prompt(`Enter your admin password to change quota for user "${username}":`);
+  if (!adminPassword) return;
+
+  const currentQuotaText = currentQuota === 0 ? "Unlimited" : formatBytes(currentQuota);
+  const newQuotaInput = prompt(`Enter new quota for user "${username}" (in bytes, 0 for unlimited):\nCurrent quota: ${currentQuotaText}`);
+  if (newQuotaInput === null) return;
+
+  const newQuota = parseInt(newQuotaInput);
+  if (isNaN(newQuota) || newQuota < 0) {
+    showError("Quota must be a non-negative number (0 for unlimited)");
+    return;
+  }
+
+  updateQuota(userId, newQuota, adminPassword);
+}
+
+async function updateQuota(userId, newQuota, adminPassword) {
+  try {
+    const response = await fetch("/admin/changeQuota", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authToken,
+      },
+      body: JSON.stringify({
+        userId,
+        newQuota,
+        adminPassword,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      showSuccess("Quota changed successfully");
+      loadUsers(); // Refresh the users list
+    } else {
+      showError(data.error || "Failed to change quota");
+    }
+  } catch (error) {
+    console.error("Error changing quota:", error);
+    showError("Failed to change quota");
   }
 }
 
