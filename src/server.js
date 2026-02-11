@@ -311,6 +311,7 @@ async function prepareUploadContext(req, res, next) {
   const code = await generateUniqueFileID(6);
   req.fileCode = code;
   let remaining = await calculateRemainFromQuota(req.user.id);
+  if (remaining < 0) {return res.sendStatus(413)}
   if (remaining !== null) {
     req.maxUploadSize = remaining;
   }

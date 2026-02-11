@@ -1,3 +1,10 @@
+fetch("/admin/getAllUsersWithFiles",{
+    method:"GET",
+    headers: {
+        Accept: "application/json",
+        Authorization: `${localStorage.getItem("token")}`
+    }
+})
 // Admin panel JavaScript
 let authToken = localStorage.getItem("token");
 let currentView = "users";
