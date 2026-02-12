@@ -323,15 +323,23 @@ async function getTotalStorageUsed() {
   try {
     conn = await pool.getConnection();
     const result = await conn.query("SELECT SUM(file_size_in_bytes) AS total_used FROM file_index");
-    return result[0].total_used || 0;
+    return Number(result[0].total_used || 0);
   } finally {
     if (conn) conn.release();
   }
 }
 
 async function getGlobalStorageLimit() {
-  const limit = process.env.GLOBAL_STORAGE_LIMIT;
-  return limit ? parseInt(limit) : 0;
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const result = await conn.query("SELECT num_value FROM settings WHERE name = ?", [
+      "global-storage-limit",
+    ]);
+    return result.length > 0 ? Number(result[0].num_value) : 0;
+  } finally {
+    if (conn) conn.release();
+  }
 }
 
 async function calculateRemainingGlobalStorage() {
