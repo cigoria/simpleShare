@@ -363,7 +363,6 @@ function displayGlobalStorage(stats) {
                             <option value="1073741824">1 GB</option>
                             <option value="10737418240">10 GB</option>
                             <option value="107374182400">100 GB</option>
-                            <option value="1099511627776">1 TB</option>
                             <option value="custom">Custom...</option>
                         </select>
                         <input type="number" id="customStorageLimit" placeholder="Bytes" min="104857600" max="1099511627776" 
