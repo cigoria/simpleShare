@@ -65,6 +65,7 @@ function setupEventListeners() {
         currentView = "users";
         document.getElementById("users-container").classList.remove("hidden");
         document.getElementById("all-files-container").classList.add("hidden");
+        document.getElementById("global-storage-container").classList.add("hidden");
         loadUsers();
       } else if (buttonText === "All Files") {
         currentView = "files";
@@ -72,7 +73,14 @@ function setupEventListeners() {
         document
           .getElementById("all-files-container")
           .classList.remove("hidden");
+        document.getElementById("global-storage-container").classList.add("hidden");
         loadAllFiles();
+      } else if (buttonText === "Global Storage") {
+        currentView = "storage";
+        document.getElementById("users-container").classList.add("hidden");
+        document.getElementById("all-files-container").classList.add("hidden");
+        document.getElementById("global-storage-container").classList.remove("hidden");
+        loadGlobalStorage();
       }
     });
   });
@@ -223,6 +231,27 @@ async function loadAllFiles() {
   }
 }
 
+async function loadGlobalStorage() {
+  try {
+    const response = await fetch("/admin/getGlobalStorageStats", {
+      method: "GET",
+      headers: {
+        Authorization: authToken,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to load global storage stats");
+    }
+
+    const stats = await response.json();
+    displayGlobalStorage(stats);
+  } catch (error) {
+    console.error("Error loading global storage stats:", error);
+    showError("Failed to load global storage statistics");
+  }
+}
+
 function displayAllFiles(files) {
   const container = document.getElementById("all-files-container");
   container.innerHTML = `
@@ -246,6 +275,123 @@ function displayAllFiles(files) {
                             ${files.map((file) => createFileRow(file)).join("")}
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function displayGlobalStorage(stats) {
+  const container = document.getElementById("global-storage-container");
+  const limitText = stats.limit === 0 ? "Unlimited" : formatBytes(stats.limit);
+  const usedText = formatBytes(stats.used);
+  const remainingText = stats.remaining === null ? "Unlimited" : formatBytes(stats.remaining);
+  const percentage = stats.percentage;
+  
+  // Determine progress bar color based on usage
+  let progressBarColor = "bg-ok";
+  if (percentage > 90) {
+    progressBarColor = "bg-error";
+  } else if (percentage > 75) {
+    progressBarColor = "bg-yellow-500";
+  }
+  
+  container.innerHTML = `
+        <div class="w-full max-w-4xl mx-auto p-6">
+            <h2 class="text-2xl font-bold mb-6 text-white">Global Storage Statistics</h2>
+            
+            <!-- Storage Overview Card -->
+            <div class="bg-black/20 backdrop-blur-[20px] rounded-xl border border-[#444] p-6 mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Storage Overview</h3>
+                
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between text-sm text-gray-300 mb-2">
+                        <span>Storage Usage</span>
+                        <span>${percentage}%</span>
+                    </div>
+                    <div class="w-full bg-black/30 rounded-full h-4 overflow-hidden">
+                        <div class="${progressBarColor} h-full rounded-full transition-all duration-300" 
+                             style="width: ${Math.min(percentage, 100)}%"></div>
+                    </div>
+                </div>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-black/30 rounded-lg p-4 border border-[#444]">
+                        <div class="text-gray-400 text-sm mb-1">Total Limit</div>
+                        <div class="text-white text-xl font-bold">${limitText}</div>
+                    </div>
+                    <div class="bg-black/30 rounded-lg p-4 border border-[#444]">
+                        <div class="text-gray-400 text-sm mb-1">Used Space</div>
+                        <div class="text-white text-xl font-bold">${usedText}</div>
+                    </div>
+                    <div class="bg-black/30 rounded-lg p-4 border border-[#444]">
+                        <div class="text-gray-400 text-sm mb-1">Remaining</div>
+                        <div class="text-white text-xl font-bold">${remainingText}</div>
+                    </div>
+                </div>
+                
+                ${stats.limit === 0 ? 
+                    '<div class="mt-4 p-3 bg-blue-500/20 border border-blue-500/50 rounded-lg">' +
+                    '<p class="text-blue-300 text-sm">📊 Global storage limit is not set. Users can upload files without a global limit.</p>' +
+                    '</div>' : 
+                    percentage > 90 ? 
+                    '<div class="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">' +
+                    '<p class="text-red-300 text-sm">⚠️ Storage usage is critically high. Consider cleaning up old files or increasing the storage limit.</p>' +
+                    '</div>' :
+                    percentage > 75 ?
+                    '<div class="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">' +
+                    '<p class="text-yellow-300 text-sm">⚠️ Storage usage is getting high. Monitor usage closely.</p>' +
+                    '</div>' : ''
+                }
+            </div>
+            
+            <!-- Configuration Info -->
+            <div class="bg-black/20 backdrop-blur-[20px] rounded-xl border border-[#444] p-6">
+                <h3 class="text-lg font-semibold text-white mb-4">Configuration</h3>
+                
+                <!-- Storage Limit Modifier -->
+                <div class="mb-6">
+                    <label class="block text-gray-300 text-sm font-medium mb-2">
+                        Global Storage Limit
+                    </label>
+                    <div class="flex gap-3">
+                        <select id="storageLimitUnit" class="bg-black/30 border border-[#444] text-white px-3 py-2 rounded-lg focus:outline-none focus:border-primary-button">
+                            <option value="0">Unlimited</option>
+                            <option value="104857600">100 MB</option>
+                            <option value="1073741824">1 GB</option>
+                            <option value="10737418240">10 GB</option>
+                            <option value="107374182400">100 GB</option>
+                            <option value="custom">Custom...</option>
+                        </select>
+                        <input type="number" id="customStorageLimit" placeholder="Bytes" min="104857600" max="1099511627776" 
+                               class="bg-black/30 border border-[#444] text-white px-3 py-2 rounded-lg focus:outline-none focus:border-primary-button hidden">
+                        <button onclick="updateGlobalStorageLimit()" 
+                                class="bg-primary-button text-black px-4 py-2 rounded-lg hover:bg-primary-button/80 transition-colors">
+                            Update Limit
+                        </button>
+                    </div>
+                    <div id="storageLimitMessage" class="mt-2 text-sm hidden"></div>
+                </div>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Current Value:</span>
+                        <code class="text-primary-button font-mono text-sm">${stats.limit} bytes</code>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-300">Status:</span>
+                        <span class="${stats.limit === 0 ? 'text-blue-400' : percentage > 90 ? 'text-red-400' : 'text-ok'} font-medium">
+                            ${stats.limit === 0 ? 'Unlimited' : percentage > 90 ? 'Critical' : 'Normal'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-black/30 rounded-lg">
+                    <p class="text-gray-400 text-sm">
+                        💡 Set a global storage limit between 100MB and 1TB, or choose Unlimited for no restrictions.
+                    </p>
                 </div>
             </div>
         </div>
@@ -841,8 +987,10 @@ async function deleteFile(fileCode) {
       // Reload current view
       if (currentView === "users") {
         loadUsers();
-      } else {
+      } else if (currentView === "files") {
         loadAllFiles();
+      } else if (currentView === "storage") {
+        loadGlobalStorage();
       }
     } else {
       throw new Error("Failed to delete file");
@@ -884,5 +1032,74 @@ function showSuccess(message) {
 
   setTimeout(() => {
     notification.remove();
+  }, 3000);
+}
+
+// Handle storage limit unit change
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.id === 'storageLimitUnit') {
+    const customInput = document.getElementById('customStorageLimit');
+    if (e.target.value === 'custom') {
+      customInput.classList.remove('hidden');
+      customInput.focus();
+    } else {
+      customInput.classList.add('hidden');
+    }
+  }
+});
+
+// Update global storage limit
+async function updateGlobalStorageLimit() {
+  const unitSelect = document.getElementById('storageLimitUnit');
+  const customInput = document.getElementById('customStorageLimit');
+  const messageDiv = document.getElementById('storageLimitMessage');
+  
+  let limit;
+  if (unitSelect.value === 'custom') {
+    limit = parseInt(customInput.value);
+    if (!limit || limit < 104857600 || limit > 1099511627776) {
+      showStorageLimitMessage('Please enter a value between 100MB and 1TB', 'error');
+      return;
+    }
+  } else {
+    limit = parseInt(unitSelect.value);
+  }
+  
+  try {
+    const response = await fetch('/admin/setGlobalStorageLimit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authToken
+      },
+      body: JSON.stringify({ limit })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      showStorageLimitMessage('Global storage limit updated successfully!', 'success');
+      // Refresh the storage stats after a short delay
+      setTimeout(() => {
+        loadGlobalStorage();
+      }, 1000);
+    } else {
+      showStorageLimitMessage(data.error || 'Failed to update storage limit', 'error');
+    }
+  } catch (error) {
+    console.error('Error updating storage limit:', error);
+    showStorageLimitMessage('Failed to update storage limit', 'error');
+  }
+}
+
+function showStorageLimitMessage(message, type) {
+  const messageDiv = document.getElementById('storageLimitMessage');
+  messageDiv.textContent = message;
+  messageDiv.classList.remove('hidden', 'text-green-400', 'text-red-400');
+  messageDiv.classList.add(type === 'success' ? 'text-green-400' : 'text-red-400');
+  
+  // Hide message after 3 seconds
+  setTimeout(() => {
+    messageDiv.classList.add('hidden');
   }, 3000);
 }
