@@ -103,7 +103,7 @@
   >
     <div
       id="header"
-      class="absolute top-0 left-0 w-full h-[100px] mobile:h-[80px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400 animate-slide-down"
+      class="absolute top-0 left-0 w-full h-[100px] mobile:h-[80px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400 animate-slide-down z-50 backdrop-blur-md"
     >
       <!-- Top header bar -->
       <a
@@ -132,6 +132,11 @@
         >
           All Files
         </button>
+        <button
+          class="bg-gray-600 text-white border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-fade-in"
+        >
+          Global Storage
+        </button>
       </div>
     </div>
 
@@ -141,6 +146,10 @@
     ></div>
     <div
       id="all-files-container"
+      class="w-full h-full pt-[100px] mobile:pt-[80px] overflow-y-auto hidden"
+    ></div>
+    <div
+      id="global-storage-container"
       class="w-full h-full pt-[100px] mobile:pt-[80px] overflow-y-auto hidden"
     ></div>
 
