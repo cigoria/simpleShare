@@ -380,11 +380,11 @@ async function calculateRemainingGlobalStorage() {
 async function prepareUploadContext(req, res, next) {
   const code = await generateUniqueFileID(6);
   req.fileCode = code;
-  
+
   // Check global storage limit first
   const globalRemaining = await calculateRemainingGlobalStorage();
   if (globalRemaining !== null && globalRemaining <= 0) {
-    return res.status(413).json({ error: "Global storage limit reached" });
+    return res.status(500).json({ error: "Global storage limit reached" });
   }
   
   // Check user quota
@@ -393,10 +393,22 @@ async function prepareUploadContext(req, res, next) {
   if (remaining !== null) {
     req.maxUploadSize = remaining;
   }
+  else if(globalRemaining !== null && remaining === null) {
+    if(globalRemaining <= 0) {
+      res.sendStatus(500);
+    }
+    else {
+      req.maxUploadSize = globalRemaining;
+    }
+  }
   
   // Apply global storage limit to max upload size if it's more restrictive
-  if (globalRemaining !== null && req.maxUploadSize && globalRemaining < req.maxUploadSize) {
-    req.maxUploadSize = globalRemaining;
+  if (globalRemaining !== null && remaining > globalRemaining) {
+    if (globalRemaining <= 0) {
+      res.sendStatus(500)
+    } else {
+      req.maxUploadSize = globalRemaining;
+    }
   }
   
   next();
