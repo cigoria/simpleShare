@@ -19,9 +19,15 @@ const pool = mariadb.createPool({
 });
 const app = express();
 
-// Set proper encoding headers
+// Set proper encoding headers for HTML routes
 app.use((req, res, next) => {
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  if (req.path.endsWith('.js')) {
+    res.setHeader("Content-Type", "application/javascript; charset=utf-8");
+  } else if (req.path.endsWith('.css')) {
+    res.setHeader("Content-Type", "text/css; charset=utf-8");
+  } else if (req.accepts('html')) {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+  }
   next();
 });
 
@@ -715,7 +721,10 @@ app.get("/admin/getTables", async (req, res) => {
   if (perms === "admin") {
     let conn;
     try {
+      // Add connection timeout
       conn = await pool.getConnection();
+      conn.queryTimeout = 5000; // 5 second timeout
+      
       const result = await conn.execute("SHOW TABLES");
 
       // The result is already array of rows, not [rows, fields]
@@ -737,7 +746,7 @@ app.get("/admin/getTables", async (req, res) => {
       return res.status(200).json(tables);
     } catch (error) {
       console.error("Error getting tables:", error);
-      return res.status(500).json({ error: "Failed to retrieve tables" });
+      return res.status(500).json({ error: "Failed to retrieve tables", details: error.message });
     } finally {
       if (conn) conn.release();
     }
@@ -1553,17 +1562,18 @@ app.post("/admin/updateCell", async (req, res) => {
       const { table, rowIndex, cellIndex, value } = req.body;
 
       if (!table || rowIndex === undefined || cellIndex === undefined) {
-        return res.status(400).json({ error: "Missing required parameters" });
+        return res.status(400).json({ error: "Missing required parameters", received: { table, rowIndex, cellIndex } });
       }
 
       conn = await pool.getConnection();
+      conn.queryTimeout = 5000; // 5 second timeout
 
       // Get column names
       const columns = await conn.execute(`DESCRIBE ${table}`);
       const columnNames = columns.map((col) => col.Field);
 
       if (cellIndex >= columnNames.length) {
-        return res.status(400).json({ error: "Invalid cell index" });
+        return res.status(400).json({ error: "Invalid cell index", cellIndex, maxIndex: columnNames.length - 1 });
       }
 
       const columnName = columnNames[cellIndex];
@@ -1587,7 +1597,7 @@ app.post("/admin/updateCell", async (req, res) => {
           [rowIndex],
         );
         if (rowData.length === 0) {
-          return res.status(404).json({ error: "Row not found" });
+          return res.status(404).json({ error: "Row not found", rowIndex });
         }
         whereClause = `${primaryKey} = ${conn.escape(rowData[0][primaryKey])}`;
       } else {
@@ -1598,7 +1608,7 @@ app.post("/admin/updateCell", async (req, res) => {
           [rowIndex],
         );
         if (rowData.length === 0) {
-          return res.status(404).json({ error: "Row not found" });
+          return res.status(404).json({ error: "Row not found", rowIndex });
         }
 
         const row = rowData[0];
@@ -1615,13 +1625,19 @@ app.post("/admin/updateCell", async (req, res) => {
       }
 
       // Update the cell
-      const updateQuery = `UPDATE ${table} SET ${columnName} = ${value === null ? "NULL" : conn.escape(value)} WHERE ${whereClause}`;
+      let formattedValue = value;
+      if (value !== null && typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/)) {
+        // Convert ISO 8601 format to MySQL datetime format
+        formattedValue = value.replace('T', ' ').replace('Z', '');
+      }
+      const updateQuery = `UPDATE ${table} SET ${columnName} = ${formattedValue === null ? "NULL" : conn.escape(formattedValue)} WHERE ${whereClause}`;
+      console.log("Executing update query:", updateQuery);
       await conn.execute(updateQuery);
 
       return res.status(200).json({ message: "Cell updated successfully" });
     } catch (error) {
       console.error("Error updating cell:", error);
-      return res.status(500).json({ error: "Failed to update cell" });
+      return res.status(500).json({ error: "Failed to update cell", details: error.message });
     } finally {
       if (conn) conn.release();
     }
