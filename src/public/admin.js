@@ -1232,9 +1232,14 @@ function populateTableSelector(tables) {
   const selector = document.getElementById("tableSelector");
   if (selector) {
     selector.innerHTML = `
-      <option value="">Select a table...</option>
-      ${tables.map(table => `<option value="${table}">${table}</option>`).join('')}
+      ${tables.map((table, index) => `<option value="${table}" ${index === 0 ? 'selected' : ''}>${table}</option>`).join('')}
     `;
+    
+    // Automatically load first table data
+    if (tables.length > 0) {
+      currentTable = tables[0];
+      loadTableData();
+    }
   }
 }
 
