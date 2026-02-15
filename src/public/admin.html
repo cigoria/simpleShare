@@ -1,158 +1,133 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simpleShare - Admin Panel</title>
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Red+Hat+Mono:ital,wght@0,300..700;1,300..700&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            screens: {
-              'mobile': {'max': '640px'},
-              'tablet': {'min': '641px', 'max': '1024px'},
-              'desktop': {'min': '1025px'},
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>simpleShare - Admin Panel</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Red+Hat+Mono:ital,wght@0,300..700;1,300..700&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          screens: {
+            'mobile': { 'max': '640px' },
+            'tablet': { 'min': '641px', 'max': '1024px' },
+            'desktop': { 'min': '1025px' },
+          },
+          colors: {
+            "primary-button": "#6792ff",
+            "secondary-button": "#5ef78c",
+            bg: "#181818",
+            text: "#ffffff",
+            input: "#d9d9d9",
+            ok: "#5ef78c",
+            danger: "#f7e15e",
+            error: "#f77b5e",
+            main: "#1f1f1f",
+          },
+          fontFamily: {
+            inter: ["Inter", "sans-serif"],
+            "red-hat": ["Red Hat Mono", "monospace"],
+          },
+          animation: {
+            "fade-in": "fadeIn 0.3s ease-in-out",
+            "fade-out": "fadeOut 0.3s ease-in-out",
+            "slide-up": "slideUp 0.3s ease-out",
+            "slide-down": "slideDown 0.3s ease-out",
+            "scale-in": "scaleIn 0.2s ease-out",
+            "scale-out": "scaleOut 0.2s ease-in",
+            "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            "spin-slow": "spin 2s linear infinite",
+            "bounce-gentle": "bounceGentle 0.6s ease-out",
+            shake: "shake 0.5s ease-in-out",
+            glow: "glow 2s ease-in-out infinite alternate",
+          },
+          keyframes: {
+            fadeIn: {
+              "0%": { opacity: "0" },
+              "100%": { opacity: "1" },
             },
-            colors: {
-              "primary-button": "#6792ff",
-              "secondary-button": "#5ef78c",
-              bg: "#181818",
-              text: "#ffffff",
-              input: "#d9d9d9",
-              ok: "#5ef78c",
-              danger: "#f7e15e",
-              error: "#f77b5e",
-              main: "#1f1f1f",
+            fadeOut: {
+              "0%": { opacity: "1" },
+              "100%": { opacity: "0" },
             },
-            fontFamily: {
-              inter: ["Inter", "sans-serif"],
-              "red-hat": ["Red Hat Mono", "monospace"],
+            slideUp: {
+              "0%": { transform: "translateY(20px)", opacity: "0" },
+              "100%": { transform: "translateY(0)", opacity: "1" },
             },
-            animation: {
-              "fade-in": "fadeIn 0.3s ease-in-out",
-              "fade-out": "fadeOut 0.3s ease-in-out",
-              "slide-up": "slideUp 0.3s ease-out",
-              "slide-down": "slideDown 0.3s ease-out",
-              "scale-in": "scaleIn 0.2s ease-out",
-              "scale-out": "scaleOut 0.2s ease-in",
-              "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-              "spin-slow": "spin 2s linear infinite",
-              "bounce-gentle": "bounceGentle 0.6s ease-out",
-              shake: "shake 0.5s ease-in-out",
-              glow: "glow 2s ease-in-out infinite alternate",
+            slideDown: {
+              "0%": { transform: "translateY(-20px)", opacity: "0" },
+              "100%": { transform: "translateY(0)", opacity: "1" },
             },
-            keyframes: {
-              fadeIn: {
-                "0%": { opacity: "0" },
-                "100%": { opacity: "1" },
-              },
-              fadeOut: {
-                "0%": { opacity: "1" },
-                "100%": { opacity: "0" },
-              },
-              slideUp: {
-                "0%": { transform: "translateY(20px)", opacity: "0" },
-                "100%": { transform: "translateY(0)", opacity: "1" },
-              },
-              slideDown: {
-                "0%": { transform: "translateY(-20px)", opacity: "0" },
-                "100%": { transform: "translateY(0)", opacity: "1" },
-              },
-              scaleIn: {
-                "0%": { transform: "scale(0.9)", opacity: "0" },
-                "100%": { transform: "scale(1)", opacity: "1" },
-              },
-              scaleOut: {
-                "0%": { transform: "scale(1)", opacity: "1" },
-                "100%": { transform: "scale(0.9)", opacity: "0" },
-              },
-              bounceGentle: {
-                "0%, 100%": { transform: "translateY(0)" },
-                "50%": { transform: "translateY(-5px)" },
-              },
-              shake: {
-                "0%, 100%": { transform: "translateX(0)" },
-                "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-2px)" },
-                "20%, 40%, 60%, 80%": { transform: "translateX(2px)" },
-              },
-              glow: {
-                "0%": { boxShadow: "0 0 5px rgba(103, 146, 255, 0.5)" },
-                "100%": { boxShadow: "0 0 20px rgba(103, 146, 255, 0.8)" },
-              },
+            scaleIn: {
+              "0%": { transform: "scale(0.9)", opacity: "0" },
+              "100%": { transform: "scale(1)", opacity: "1" },
+            },
+            scaleOut: {
+              "0%": { transform: "scale(1)", opacity: "1" },
+              "100%": { transform: "scale(0.9)", opacity: "0" },
+            },
+            bounceGentle: {
+              "0%, 100%": { transform: "translateY(0)" },
+              "50%": { transform: "translateY(-5px)" },
+            },
+            shake: {
+              "0%, 100%": { transform: "translateX(0)" },
+              "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-2px)" },
+              "20%, 40%, 60%, 80%": { transform: "translateX(2px)" },
+            },
+            glow: {
+              "0%": { boxShadow: "0 0 5px rgba(103, 146, 255, 0.5)" },
+              "100%": { boxShadow: "0 0 20px rgba(103, 146, 255, 0.8)" },
             },
           },
         },
-      };
-    </script>
-  </head>
-  <body
-    class="m-0 p-0 bg-bg text-white font-inter flex justify-center items-center h-screen overflow-hidden select-none"
-  >
+      },
+    };
+  </script>
+</head>
+
+<body class="m-0 p-0 bg-bg text-white font-inter flex justify-center items-center h-screen overflow-hidden select-none">
+  <div id="header"
+    class="absolute top-0 left-0 w-full h-[100px] mobile:h-[80px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400 animate-slide-down z-50 backdrop-blur-md">
+    <!-- Top header bar -->
+    <a href="/"
+      class="absolute p-0 m-[10px] mobile:m-[5px] top-5 mobile:top-3 left-5 mobile:left-3 font-inter font-normal text-white text-3xl mobile:text-2xl animate-fade-in no-underline">
+      simple<span
+        class="bg-gradient-to-r from-primary-button to-secondary-button bg-clip-text text-transparent">Share</span>
+    </a>
     <div
-      id="header"
-      class="absolute top-0 left-0 w-full h-[100px] mobile:h-[80px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400 animate-slide-down z-50 backdrop-blur-md"
-    >
-      <!-- Top header bar -->
-      <a
-        href="/"
-        class="absolute p-0 m-[10px] mobile:m-[5px] top-5 mobile:top-3 left-5 mobile:left-3 font-inter font-normal text-white text-3xl mobile:text-2xl animate-fade-in no-underline"
-      >
-        simple<span
-          class="bg-gradient-to-r from-primary-button to-secondary-button bg-clip-text text-transparent"
-          >Share</span
-        >
+      class="button-container absolute top-5 mobile:top-3 right-5 mobile:right-3 flex gap-2 mobile:gap-1 flex-wrap mobile:flex-col mobile:items-end">
+      <a href="/"
+        class="bg-secondary-button text-black border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-secondary-button/50 animate-fade-in no-underline inline-block">
+        Back to App
       </a>
-      <div class="button-container absolute top-5 mobile:top-3 right-5 mobile:right-3 flex gap-2 mobile:gap-1 flex-wrap mobile:flex-col mobile:items-end">
-        <a
-          href="/"
-          class="bg-secondary-button text-black border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-secondary-button/50 animate-fade-in no-underline inline-block"
-        >
-          Back to App
-        </a>
-        <button
-          class="bg-gray-600 text-white border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-fade-in"
-        >
-          Users
-        </button>
-        <button
-          class="bg-gray-600 text-white border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-fade-in"
-        >
-          All Files
-        </button>
-        <button
-          class="bg-gray-600 text-white border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-fade-in"
-        >
-          Global Storage
-        </button>
-      </div>
+      <button
+        class="bg-gray-600 text-white border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-fade-in">
+        Users
+      </button>
+      <button
+        class="bg-gray-600 text-white border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-fade-in">
+        All Files
+      </button>
+      <button
+        class="bg-gray-600 text-white border-none px-[25px] mobile:px-[15px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] m-[10px] mobile:m-[5px] transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50 animate-fade-in">
+        Global Storage
+      </button>
     </div>
+  </div>
 
-    <div
-      id="users-container"
-      class="w-full h-full pt-[100px] mobile:pt-[80px] overflow-y-auto"
-    ></div>
-    <div
-      id="all-files-container"
-      class="w-full h-full pt-[100px] mobile:pt-[80px] overflow-y-auto hidden"
-    ></div>
-    <div
-      id="global-storage-container"
-      class="w-full h-full pt-[100px] mobile:pt-[80px] overflow-y-auto hidden"
-    ></div>
+  <div id="users-container" class="w-full h-full pt-[100px] mobile:pt-[80px] overflow-y-auto"></div>
+  <div id="all-files-container" class="w-full h-full pt-[100px] mobile:pt-[80px] overflow-y-auto hidden"></div>
+  <div id="global-storage-container" class="w-full h-full pt-[100px] mobile:pt-[80px] overflow-y-auto hidden"></div>
 
-    <script src="/admin.js"></script>
-  </body>
+  <script src="/admin.js"></script>
+</body>
+
 </html>
