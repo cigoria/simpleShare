@@ -694,6 +694,135 @@ app.get("/admin/getAllUsersWithFiles", async (req, res) => {
   }
 });
 
+app.get("/admin/getTables", async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.sendStatus(401);
+  }
+  let perms = await getPermissions(req.headers.authorization);
+  if (perms === "none") {
+    return res.sendStatus(401);
+  }
+  if (perms === "user") {
+    return res.sendStatus(403);
+  }
+  if (perms === "admin") {
+    try {
+      const conn = await pool.getConnection();
+      const result = await conn.execute("SHOW TABLES");
+      conn.release();
+      
+      // The result is already the array of rows, not [rows, fields]
+      const rows = result;
+      
+      if (!Array.isArray(rows)) {
+        console.error("Rows is not an array:", rows);
+        return res.status(500).json({ error: "Invalid query result format" });
+      }
+      
+      // Extract table names from the result
+      const tables = rows.map(row => {
+        // MySQL SHOW TABLES returns objects with key like "Tables_in_databaseName"
+        const keys = Object.keys(row);
+        return row[keys[0]];
+      });
+      
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      return res.status(200).json(tables);
+    } catch (error) {
+      console.error("Error getting tables:", error);
+      return res.status(500).json({ error: "Failed to retrieve tables" });
+    }
+  }
+});
+
+app.get("/admin/getTableData", async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.sendStatus(401);
+  }
+  let perms = await getPermissions(req.headers.authorization);
+  if (perms === "none") {
+    return res.sendStatus(401);
+  }
+  if (perms === "user") {
+    return res.sendStatus(403);
+  }
+  if (perms === "admin") {
+    try {
+      const tableName = req.query.table;
+      if (!tableName) {
+        return res.status(400).json({ error: "Table name is required" });
+      }
+      
+      const conn = await pool.getConnection();
+      
+      // Get column information
+      const columns = await conn.execute(`DESCRIBE ${tableName}`);
+      const columnNames = columns.map(col => col.Field);
+      
+      // Get table data
+      const rows = await conn.execute(`SELECT * FROM ${tableName} LIMIT 100`);
+      conn.release();
+      
+      // Convert rows to array format and handle BigInt
+      const data = rows.map(row => {
+        return columnNames.map(col => {
+          const value = row[col];
+          return typeof value === 'bigint' ? Number(value) : value;
+        });
+      });
+      
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      return res.status(200).json({
+        columns: columnNames,
+        rows: data
+      });
+    } catch (error) {
+      console.error("Error getting table data:", error);
+      return res.status(500).json({ error: "Failed to retrieve table data" });
+    }
+  }
+});
+
+app.get("/admin/getTableSchema", async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.sendStatus(401);
+  }
+  let perms = await getPermissions(req.headers.authorization);
+  if (perms === "none") {
+    return res.sendStatus(401);
+  }
+  if (perms === "user") {
+    return res.sendStatus(403);
+  }
+  if (perms === "admin") {
+    try {
+      const tableName = req.query.table;
+      if (!tableName) {
+        return res.status(400).json({ error: "Table name is required" });
+      }
+      
+      const conn = await pool.getConnection();
+      const columns = await conn.execute(`DESCRIBE ${tableName}`);
+      conn.release();
+      
+      const schema = columns.map(col => ({
+        name: col.Field,
+        type: col.Type,
+        nullable: col.Null,
+        key: col.Key,
+        default: col.Default,
+        extra: col.Extra
+      }));
+      
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      return res.status(200).json(schema);
+    } catch (error) {
+      console.error("Error getting table schema:", error);
+      return res.status(500).json({ error: "Failed to retrieve table schema" });
+    }
+  }
+});
+
 app.get("/admin/getGlobalStorageStats", async (req, res) => {
   if (!req.headers.authorization) {
     return res.sendStatus(401);
@@ -1355,11 +1484,204 @@ app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "./public/admin.html"));
 });
 
+app.get("/database", (req, res) => {
+  res.sendFile(path.join(__dirname, "./public/database.html"));
+});
+
 app.use("/", (req, res, next) => {
   if (req.method === "GET") {
     res.sendFile(path.join(__dirname, "./public/index.html"));
   } else {
     next();
+  }
+});
+
+app.post("/admin/updateCell", async (req, res) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  
+  if (!req.headers.authorization) {
+    return res.status(401).json({ error: "Authorization required" });
+  }
+  
+  let perms = await getPermissions(req.headers.authorization);
+  if (perms === "none") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  if (perms === "user") {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  
+  if (perms === "admin") {
+    try {
+      const { table, rowIndex, cellIndex, value } = req.body;
+      
+      if (!table || rowIndex === undefined || cellIndex === undefined) {
+        return res.status(400).json({ error: "Missing required parameters" });
+      }
+      
+      const conn = await pool.getConnection();
+      
+      // Get column names
+      const columns = await conn.execute(`DESCRIBE ${table}`);
+      const columnNames = columns.map(col => col.Field);
+      
+      if (cellIndex >= columnNames.length) {
+        conn.release();
+        return res.status(400).json({ error: "Invalid cell index" });
+      }
+      
+      const columnName = columnNames[cellIndex];
+      
+      // Get primary key to identify the row
+      const primaryKeyInfo = await conn.execute(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = 'PRIMARY'
+      `, [table]);
+      
+      let whereClause;
+      if (primaryKeyInfo.length > 0) {
+        // Use primary key
+        const primaryKey = primaryKeyInfo[0].COLUMN_NAME;
+        const rowData = await conn.execute(`SELECT ${primaryKey} FROM ${table} LIMIT 1 OFFSET ?`, [rowIndex]);
+        if (rowData.length === 0) {
+          conn.release();
+          return res.status(404).json({ error: "Row not found" });
+        }
+        whereClause = `${primaryKey} = ${conn.escape(rowData[0][primaryKey])}`;
+      } else {
+        // Fallback to LIMIT/OFFSET (not ideal but works for simple cases)
+        whereClause = `1 LIMIT 1 OFFSET ${rowIndex}`;
+      }
+      
+      // Update the cell
+      const updateQuery = `UPDATE ${table} SET ${columnName} = ${value === null ? 'NULL' : conn.escape(value)} WHERE ${whereClause}`;
+      await conn.execute(updateQuery);
+      
+      conn.release();
+      return res.status(200).json({ message: "Cell updated successfully" });
+    } catch (error) {
+      console.error("Error updating cell:", error);
+      return res.status(500).json({ error: "Failed to update cell" });
+    }
+  }
+});
+
+app.post("/admin/insertRow", async (req, res) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  
+  if (!req.headers.authorization) {
+    return res.status(401).json({ error: "Authorization required" });
+  }
+  
+  let perms = await getPermissions(req.headers.authorization);
+  if (perms === "none") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  if (perms === "user") {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  
+  if (perms === "admin") {
+    try {
+      const { table, values } = req.body;
+      
+      if (!table || !values) {
+        return res.status(400).json({ error: "Missing required parameters" });
+      }
+      
+      const conn = await pool.getConnection();
+      
+      // Get column names and types
+      const columns = await conn.execute(`DESCRIBE ${table}`);
+      
+      // Build INSERT query
+      const columnNames = Object.keys(values);
+      const columnValues = Object.values(values);
+      
+      const placeholders = columnValues.map(() => '?').join(', ');
+      const query = `INSERT INTO ${table} (${columnNames.join(', ')}) VALUES (${placeholders})`;
+      
+      await conn.execute(query, columnValues);
+      conn.release();
+      
+      return res.status(200).json({ message: "Row inserted successfully" });
+    } catch (error) {
+      console.error("Error inserting row:", error);
+      return res.status(500).json({ error: "Failed to insert row" });
+    }
+  }
+});
+
+app.post("/admin/deleteRow", async (req, res) => {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  
+  if (!req.headers.authorization) {
+    return res.status(401).json({ error: "Authorization required" });
+  }
+  
+  let perms = await getPermissions(req.headers.authorization);
+  if (perms === "none") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  if (perms === "user") {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  
+  if (perms === "admin") {
+    try {
+      const { table, rowIndex, adminPassword } = req.body;
+      
+      if (!table || rowIndex === undefined || !adminPassword) {
+        return res.status(400).json({ error: "Missing required parameters" });
+      }
+      
+      // Verify admin password
+      const adminUserId = jwt.decode(req.headers.authorization).userId;
+      const [adminData] = await pool.query("SELECT password_hash FROM users WHERE id = ?", [adminUserId]);
+      if (adminData.length === 0) {
+        return res.status(401).json({ error: "Admin user not found" });
+      }
+      
+      const isPasswordValid = await bcrypt.compare(adminPassword, adminData[0].password_hash);
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: "Invalid admin password" });
+      }
+      
+      const conn = await pool.getConnection();
+      
+      // Get primary key to identify the row
+      const primaryKeyInfo = await conn.execute(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = 'PRIMARY'
+      `, [table]);
+      
+      let whereClause;
+      if (primaryKeyInfo.length > 0) {
+        // Use primary key
+        const primaryKey = primaryKeyInfo[0].COLUMN_NAME;
+        const rowData = await conn.execute(`SELECT ${primaryKey} FROM ${table} LIMIT 1 OFFSET ?`, [rowIndex]);
+        if (rowData.length === 0) {
+          conn.release();
+          return res.status(404).json({ error: "Row not found" });
+        }
+        whereClause = `${primaryKey} = ${conn.escape(rowData[0][primaryKey])}`;
+      } else {
+        // Fallback to LIMIT/OFFSET
+        whereClause = `1 LIMIT 1 OFFSET ${rowIndex}`;
+      }
+      
+      // Delete the row
+      const deleteQuery = `DELETE FROM ${table} WHERE ${whereClause}`;
+      await conn.execute(deleteQuery);
+      
+      conn.release();
+      return res.status(200).json({ message: "Row deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting row:", error);
+      return res.status(500).json({ error: "Failed to delete row" });
+    }
   }
 });
 
