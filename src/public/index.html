@@ -209,6 +209,16 @@
           <span style="color: #4c73f0">Select</span> files here
         </p>
       </div>
+      <div id="upload-options" class="hidden w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-4 mobile:p-2">
+        <div class="bg-black/20 rounded-xl border border-[#444] p-4 mobile:p-3">
+          <label class="block text-white mb-2 text-sm mobile:text-xs font-inter">
+            Tag (optional):
+          </label>
+          <input type="text" id="upload-tag" name="tag" placeholder="Enter a tag to organize your files"
+            class="w-full p-3 mobile:p-2 rounded-lg border border-[#555] outline-none text-base mobile:text-sm bg-[#2a2a2a] font-red-hat text-white transition-all duration-200 focus:border-primary-button focus:shadow-lg focus:shadow-primary-button/30 hover:bg-[#333333]"
+            maxlength="50" />
+        </div>
+      </div>
       <div id="upload-status-box"
         class="hidden w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-8 mobile:p-4 flex flex-col items-center justify-center">
         <div class="text-center mb-8 mobile:mb-4">
@@ -416,6 +426,10 @@
                   <th
                     class="px-2 mobile:px-1 py-2 mobile:py-1 text-left border-b border-[#444] min-w-[150px] mobile:min-w-[100px] text-sm mobile:text-xs">
                     Filename
+                  </th>
+                  <th
+                    class="px-2 mobile:px-1 py-2 mobile:py-1 text-left border-b border-[#444] text-sm mobile:text-xs">
+                    Tag
                   </th>
                   <th
                     class="px-2 mobile:px-1 py-2 mobile:py-1 text-left border-b border-[#444] text-sm mobile:text-xs hidden mobile:table-cell">

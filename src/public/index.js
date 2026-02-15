@@ -95,60 +95,135 @@ async function updateFilesDisplay() {
   });
   console.log(result.status);
   let result_json = await result.json();
+  
+  // Group files by tags
+  let groupedFiles = {};
   for (let file in result_json) {
     let file_data = result_json[file];
-
-    // Decode filename to handle UTF-8 properly
-    let decodedName = file_data.name;
-    try {
-      // If the name is double-encoded, decode it
-      decodedName = decodeURIComponent(escape(file_data.name));
-    } catch (e) {
-      // If decoding fails, use original name
-      decodedName = file_data.name;
+    let tag = file_data.tags || "General";
+    
+    if (!groupedFiles[tag]) {
+      groupedFiles[tag] = [];
     }
+    groupedFiles[tag].push(file_data);
+  }
+  
+  // Display files grouped by tags
+  for (let tag in groupedFiles) {
+    // Add tag header row
+    let headerRow = `<tr class="tag-header">
+      <td colspan="7" class="px-4 py-3 bg-black/30 border-b border-[#444]">
+        <div class="flex items-center gap-2">
+          <span class="material-icons-outlined text-primary-button">folder</span>
+          <span class="font-semibold text-primary-button">${tag}</span>
+          <span class="text-gray-400 text-sm">(${groupedFiles[tag].length} files)</span>
+        </div>
+      </td>
+    </tr>`;
+    document.getElementById("my-files-tbody").insertAdjacentHTML("beforeend", headerRow);
+    
+    // Add files for this tag
+    for (let file in groupedFiles[tag]) {
+      let file_data = groupedFiles[tag][file];
 
-    // Format file size to human readable format
-    let formattedSize = formatBytes(file_data.size);
+      // Decode filename to handle UTF-8 properly
+      let decodedName = file_data.name;
+      try {
+        // If the name is double-encoded, decode it
+        decodedName = decodeURIComponent(escape(file_data.name));
+      } catch (e) {
+        // If decoding fails, use original name
+        decodedName = file_data.name;
+      }
 
-    // Format date to shorter human readable format (no line breaks)
-    let formattedDate =
-      new Date(file_data.date).toLocaleDateString("hu-HU", {
-        year: "2-digit",
-        month: "2-digit",
-        day: "2-digit",
-      }) +
-      " " +
-      new Date(file_data.date).toLocaleTimeString("hu-HU", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      // Format file size to human readable format
+      let formattedSize = formatBytes(file_data.size);
 
-    // Single table row with all columns including action buttons
-    let row = `<tr class="border-b border-[#444] hover:bg-black/20 h-[50px]">
-            <td class="px-4 py-2 align-middle whitespace-nowrap">${file_data.code}</td>
-            <td class="px-4 py-2 align-middle min-w-[200px]">${decodedName}</td>
-            <td class="px-4 py-2 align-middle whitespace-nowrap">${formattedDate}</td>
-            <td class="px-4 py-2 align-middle whitespace-nowrap">${formattedSize}</td>
-            <td class="px-2 py-2 text-center align-middle">
-                <button class="download-button bg-secondary-button text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center mx-auto" 
-                        onclick="download('${file_data.code}')" 
-                        title="Download">
-                    <span class="material-icons-outlined text-lg">download</span>
-                </button>
-            </td>
-            <td class="px-2 py-2 text-center align-middle">
-                <button class="delete-button bg-error text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center mx-auto" 
-                        onclick="deleteFile('${file_data.code}')" 
-                        title="Delete">
-                    <span class="material-icons-outlined text-lg">delete</span>
-                </button>
-            </td>
-        </tr>`;
+      // Format date to shorter human readable format (no line breaks)
+      let formattedDate =
+        new Date(file_data.date).toLocaleDateString("hu-HU", {
+          year: "2-digit",
+          month: "2-digit",
+          day: "2-digit",
+        }) +
+        " " +
+        new Date(file_data.date).toLocaleTimeString("hu-HU", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
 
-    document
-      .getElementById("my-files-tbody")
-      .insertAdjacentHTML("beforeend", row);
+      // Create tag display with edit functionality
+      let tagDisplay = file_data.tags ? 
+        `<div class="flex items-center gap-2">
+          <span class="tag-badge bg-primary-button/20 text-primary-button px-2 py-1 rounded text-xs font-medium">${file_data.tags}</span>
+          <button class="edit-tag-btn text-gray-400 hover:text-white transition-colors" onclick="editTag('${file_data.code}', '${file_data.tags || ''}')" title="Edit tag">
+            <span class="material-icons-outlined text-sm">edit</span>
+          </button>
+        </div>` :
+        `<button class="add-tag-btn text-gray-400 hover:text-primary-button transition-colors" onclick="editTag('${file_data.code}', '')" title="Add tag">
+          <span class="material-icons-outlined text-sm">add_circle</span>
+        </button>`;
+
+      // Single table row with all columns including action buttons
+      let row = `<tr class="border-b border-[#444] hover:bg-black/20 h-[50px]">
+              <td class="px-4 py-2 align-middle whitespace-nowrap">${file_data.code}</td>
+              <td class="px-4 py-2 align-middle min-w-[200px]">${decodedName}</td>
+              <td class="px-4 py-2 align-middle">${tagDisplay}</td>
+              <td class="px-4 py-2 align-middle whitespace-nowrap">${formattedDate}</td>
+              <td class="px-4 py-2 align-middle whitespace-nowrap">${formattedSize}</td>
+              <td class="px-2 py-2 text-center align-middle">
+                  <button class="download-button bg-secondary-button text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center mx-auto" 
+                          onclick="download('${file_data.code}')" 
+                          title="Download">
+                      <span class="material-icons-outlined text-lg">download</span>
+                  </button>
+              </td>
+              <td class="px-2 py-2 text-center align-middle">
+                  <button class="delete-button bg-error text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center mx-auto" 
+                          onclick="deleteFile('${file_data.code}')" 
+                          title="Delete">
+                      <span class="material-icons-outlined text-lg">delete</span>
+                  </button>
+              </td>
+          </tr>`;
+
+      document.getElementById("my-files-tbody").insertAdjacentHTML("beforeend", row);
+    }
+  }
+}
+
+async function editTag(fileCode, currentTag) {
+  const newTag = prompt("Enter tag for this file:", currentTag);
+  
+  if (newTag === null) {
+    // User cancelled
+    return;
+  }
+  
+  try {
+    const response = await fetch("/updateTags", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+        "Authorization": localStorage.getItem("token")
+      },
+      body: JSON.stringify({
+        fileCode: fileCode,
+        tags: newTag.trim() || null
+      })
+    });
+    
+    if (response.ok) {
+      // Refresh the files display to show updated tags
+      await updateFilesDisplay();
+    } else {
+      const error = await response.json();
+      console.error("Failed to update tag:", error.error);
+      alert("Failed to update tag: " + error.error);
+    }
+  } catch (err) {
+    console.error("Error updating tag:", err);
+    alert("Network error. Please try again.");
   }
 }
 
@@ -514,7 +589,9 @@ dropZone.addEventListener("drop", (event) => {
   dropZone.style.backgroundColor = "";
   dropZone.style.borderColor = "";
   let files = event.dataTransfer.files;
-  handleFiles(files);
+  
+  // Show tag input first, then handle upload after user enters tag (or leaves empty)
+  showTagInputAndUpload(files);
 });
 dropZone.addEventListener("click", (event) => {
   event.preventDefault();
@@ -523,7 +600,7 @@ dropZone.addEventListener("click", (event) => {
   input.type = "file";
   input.onchange = (e) => {
     let files = e.target.files;
-    handleFiles(files);
+    showTagInputAndUpload(files);
     dropZone.classList.remove("select");
   };
   input.oncancel = (event) => {
@@ -532,8 +609,44 @@ dropZone.addEventListener("click", (event) => {
   input.click();
 });
 
-async function handleFiles(files) {
+function showTagInputAndUpload(files) {
   document.getElementById("drop_zone").style.display = "none";
+  document.getElementById("upload-options").classList.remove("hidden");
+  document.getElementById("upload-options").style.display = "block";
+  
+  // Focus on tag input
+  const tagInput = document.getElementById("upload-tag");
+  tagInput.focus();
+  
+  // Add upload button that starts the actual upload
+  const uploadButton = document.createElement("button");
+  uploadButton.textContent = "Upload with tag";
+  uploadButton.className = "mt-4 w-full bg-primary-button text-black p-3 rounded-lg font-red-hat cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary-button/50";
+  uploadButton.onclick = () => {
+    handleFiles(files);
+  };
+  
+  // Add skip button for uploading without tag
+  const skipButton = document.createElement("button");
+  skipButton.textContent = "Upload without tag";
+  skipButton.className = "mt-2 w-full bg-gray-600 text-white p-3 rounded-lg font-red-hat cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-gray-600/50";
+  skipButton.onclick = () => {
+    tagInput.value = "";
+    handleFiles(files);
+  };
+  
+  // Clear previous buttons and add new ones
+  const optionsContainer = document.getElementById("upload-options");
+  const existingButtons = optionsContainer.querySelectorAll("button");
+  existingButtons.forEach(btn => btn.remove());
+  
+  optionsContainer.appendChild(uploadButton);
+  optionsContainer.appendChild(skipButton);
+}
+
+async function handleFiles(files) {
+  // Hide the tag input options and show status
+  document.getElementById("upload-options").style.display = "none";
   document.getElementById("upload-status-box").classList.remove("hidden");
   document.getElementById("upload-status-box").style.display = "flex";
   document
@@ -551,6 +664,12 @@ async function handleFiles(files) {
     });
   const formData = new FormData();
   formData.append("file", files[0]);
+  
+  // Add tag to form data if provided
+  const tagInput = document.getElementById("upload-tag");
+  if (tagInput && tagInput.value.trim()) {
+    formData.append("tags", tagInput.value.trim());
+  }
 
   const response = await fetch("/upload", {
     method: "POST",

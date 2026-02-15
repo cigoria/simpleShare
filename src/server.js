@@ -16,13 +16,22 @@ const pool = mariadb.createPool({
   database: "simpleShare",
   connectionLimit: 5,
   charset: "utf8mb4",
+  acquireTimeout: 10000,
+  timeout: 10000,
+  reconnect: true,
+  multipleStatements: true,
 });
 const app = express();
 
-// Set proper encoding headers
+// Set proper encoding headers for HTML routes only
 app.use((req, res, next) => {
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  next();
+  // Don't set content type for static files - let express handle it
+  if (req.path.startsWith('/index.js') || req.path.includes('.js')) {
+    next();
+  } else {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    next();
+  }
 });
 
 app.use(express.json({ charset: "utf-8" }));
@@ -520,7 +529,7 @@ async function registerUploadInIndex(req) {
     conn = await pool.getConnection();
 
     let res = await conn.query(
-      "INSERT INTO file_index(id, mime_type, stored_filename, original_name, file_size_in_bytes, user_id) VALUES (?,?,?,?,?,?)",
+      "INSERT INTO file_index(id, mime_type, stored_filename, original_name, file_size_in_bytes, user_id, tags) VALUES (?,?,?,?,?,?,?)",
       [
         req.fileCode,
         req.file.mimetype,
@@ -528,6 +537,7 @@ async function registerUploadInIndex(req) {
         req.file.originalname,
         req.file.size,
         req.user.id,
+        req.body.tags || null,
       ],
     );
     return !!res;
@@ -552,6 +562,7 @@ async function getAllUserFiles(user_id) {
         mimetype: results[file].mime_type,
         size: results[file].file_size_in_bytes,
         date: results[file].date_added,
+        tags: results[file].tags,
       });
     }
     return return_list;
@@ -559,6 +570,30 @@ async function getAllUserFiles(user_id) {
     if (conn) {
       conn.release();
     }
+  }
+}
+
+async function updateFileTags(file_code, tags, user_id, is_admin = false) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    
+    // Check if file exists and user has permission
+    let file_data = await conn.query("SELECT * FROM file_index WHERE id = ?", [file_code]);
+    if (file_data.length === 0) {
+      return { success: false, error: "File not found" };
+    }
+    
+    // Check permissions
+    if (!is_admin && file_data[0].user_id !== user_id) {
+      return { success: false, error: "Unauthorized" };
+    }
+    
+    // Update tags
+    await conn.query("UPDATE file_index SET tags = ? WHERE id = ?", [tags || null, file_code]);
+    return { success: true };
+  } finally {
+    if (conn) conn.release();
   }
 }
 
@@ -860,6 +895,33 @@ app.use((err, req, res, next) => {
   }
 
   next();
+});
+
+app.post("/updateTags", async (req, res) => {
+  if (!req.headers.authorization) {
+    return res.sendStatus(401);
+  }
+
+  const { fileCode, tags } = req.body;
+  
+  if (!fileCode) {
+    return res.status(400).json({ error: "File code is required" });
+  }
+
+  let perms = await getPermissions(req.headers.authorization);
+  let user_id = await validateToken(req.headers.authorization);
+  
+  if (perms === "none") {
+    return res.sendStatus(401);
+  }
+
+  let result = await updateFileTags(fileCode, tags, user_id, perms === "admin");
+  
+  if (result.success) {
+    return res.status(200).json({ message: "Tags updated successfully" });
+  } else {
+    return res.status(400).json({ error: result.error });
+  }
 });
 
 app.post("/login", async (req, res) => {
