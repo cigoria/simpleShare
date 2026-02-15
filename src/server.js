@@ -713,12 +713,12 @@ app.get("/admin/getTables", async (req, res) => {
     return res.sendStatus(403);
   }
   if (perms === "admin") {
+    let conn;
     try {
-      const conn = await pool.getConnection();
+      conn = await pool.getConnection();
       const result = await conn.execute("SHOW TABLES");
-      conn.release();
 
-      // The result is already the array of rows, not [rows, fields]
+      // The result is already array of rows, not [rows, fields]
       const rows = result;
 
       if (!Array.isArray(rows)) {
@@ -738,6 +738,8 @@ app.get("/admin/getTables", async (req, res) => {
     } catch (error) {
       console.error("Error getting tables:", error);
       return res.status(500).json({ error: "Failed to retrieve tables" });
+    } finally {
+      if (conn) conn.release();
     }
   }
 });
@@ -754,13 +756,14 @@ app.get("/admin/getTableData", async (req, res) => {
     return res.sendStatus(403);
   }
   if (perms === "admin") {
+    let conn;
     try {
       const tableName = req.query.table;
       if (!tableName) {
         return res.status(400).json({ error: "Table name is required" });
       }
 
-      const conn = await pool.getConnection();
+      conn = await pool.getConnection();
 
       // Get column information
       const columns = await conn.execute(`DESCRIBE ${tableName}`);
@@ -768,7 +771,6 @@ app.get("/admin/getTableData", async (req, res) => {
 
       // Get table data
       const rows = await conn.execute(`SELECT * FROM ${tableName} LIMIT 100`);
-      conn.release();
 
       // Convert rows to array format and handle BigInt
       const data = rows.map((row) => {
@@ -786,6 +788,8 @@ app.get("/admin/getTableData", async (req, res) => {
     } catch (error) {
       console.error("Error getting table data:", error);
       return res.status(500).json({ error: "Failed to retrieve table data" });
+    } finally {
+      if (conn) conn.release();
     }
   }
 });
@@ -802,15 +806,15 @@ app.get("/admin/getTableSchema", async (req, res) => {
     return res.sendStatus(403);
   }
   if (perms === "admin") {
+    let conn;
     try {
       const tableName = req.query.table;
       if (!tableName) {
         return res.status(400).json({ error: "Table name is required" });
       }
 
-      const conn = await pool.getConnection();
+      conn = await pool.getConnection();
       const columns = await conn.execute(`DESCRIBE ${tableName}`);
-      conn.release();
 
       const schema = columns.map((col) => ({
         name: col.Field,
@@ -826,6 +830,8 @@ app.get("/admin/getTableSchema", async (req, res) => {
     } catch (error) {
       console.error("Error getting table schema:", error);
       return res.status(500).json({ error: "Failed to retrieve table schema" });
+    } finally {
+      if (conn) conn.release();
     }
   }
 });
@@ -1542,6 +1548,7 @@ app.post("/admin/updateCell", async (req, res) => {
   }
 
   if (perms === "admin") {
+    let conn;
     try {
       const { table, rowIndex, cellIndex, value } = req.body;
 
@@ -1549,14 +1556,13 @@ app.post("/admin/updateCell", async (req, res) => {
         return res.status(400).json({ error: "Missing required parameters" });
       }
 
-      const conn = await pool.getConnection();
+      conn = await pool.getConnection();
 
       // Get column names
       const columns = await conn.execute(`DESCRIBE ${table}`);
       const columnNames = columns.map((col) => col.Field);
 
       if (cellIndex >= columnNames.length) {
-        conn.release();
         return res.status(400).json({ error: "Invalid cell index" });
       }
 
@@ -1581,7 +1587,6 @@ app.post("/admin/updateCell", async (req, res) => {
           [rowIndex],
         );
         if (rowData.length === 0) {
-          conn.release();
           return res.status(404).json({ error: "Row not found" });
         }
         whereClause = `${primaryKey} = ${conn.escape(rowData[0][primaryKey])}`;
@@ -1593,7 +1598,6 @@ app.post("/admin/updateCell", async (req, res) => {
           [rowIndex],
         );
         if (rowData.length === 0) {
-          conn.release();
           return res.status(404).json({ error: "Row not found" });
         }
 
@@ -1614,11 +1618,12 @@ app.post("/admin/updateCell", async (req, res) => {
       const updateQuery = `UPDATE ${table} SET ${columnName} = ${value === null ? "NULL" : conn.escape(value)} WHERE ${whereClause}`;
       await conn.execute(updateQuery);
 
-      conn.release();
       return res.status(200).json({ message: "Cell updated successfully" });
     } catch (error) {
       console.error("Error updating cell:", error);
       return res.status(500).json({ error: "Failed to update cell" });
+    } finally {
+      if (conn) conn.release();
     }
   }
 });
@@ -1639,6 +1644,7 @@ app.post("/admin/insertRow", async (req, res) => {
   }
 
   if (perms === "admin") {
+    let conn;
     try {
       const { table, values } = req.body;
 
@@ -1646,7 +1652,7 @@ app.post("/admin/insertRow", async (req, res) => {
         return res.status(400).json({ error: "Missing required parameters" });
       }
 
-      const conn = await pool.getConnection();
+      conn = await pool.getConnection();
 
       // Get column names and types
       const columns = await conn.execute(`DESCRIBE ${table}`);
@@ -1659,12 +1665,13 @@ app.post("/admin/insertRow", async (req, res) => {
       const query = `INSERT INTO ${table} (${columnNames.join(", ")}) VALUES (${placeholders})`;
 
       await conn.execute(query, columnValues);
-      conn.release();
 
       return res.status(200).json({ message: "Row inserted successfully" });
     } catch (error) {
       console.error("Error inserting row:", error);
       return res.status(500).json({ error: "Failed to insert row" });
+    } finally {
+      if (conn) conn.release();
     }
   }
 });
@@ -1685,6 +1692,7 @@ app.post("/admin/deleteRow", async (req, res) => {
   }
 
   if (perms === "admin") {
+    let conn;
     try {
       const { table, rowIndex, adminPassword } = req.body;
 
@@ -1700,14 +1708,13 @@ app.post("/admin/deleteRow", async (req, res) => {
         return res.status(401).json({ error: "Invalid token" });
       }
 
-      const conn = await pool.getConnection();
+      conn = await pool.getConnection();
 
       const adminData = await conn.query(
         "SELECT password_hash FROM users WHERE id = ?",
         [adminUserId],
       );
       if (adminData.length === 0) {
-        conn.release();
         return res.status(401).json({ error: "Admin user not found" });
       }
 
@@ -1716,7 +1723,6 @@ app.post("/admin/deleteRow", async (req, res) => {
         adminData[0].password_hash,
       );
       if (!isPasswordValid) {
-        conn.release();
         return res.status(401).json({ error: "Invalid admin password" });
       }
 
@@ -1739,7 +1745,6 @@ app.post("/admin/deleteRow", async (req, res) => {
           [rowIndex],
         );
         if (rowData.length === 0) {
-          conn.release();
           return res.status(404).json({ error: "Row not found" });
         }
         whereClause = `${primaryKey} = ${conn.escape(rowData[0][primaryKey])}`;
@@ -1751,7 +1756,6 @@ app.post("/admin/deleteRow", async (req, res) => {
           [rowIndex],
         );
         if (rowData.length === 0) {
-          conn.release();
           return res.status(404).json({ error: "Row not found" });
         }
 
@@ -1772,11 +1776,12 @@ app.post("/admin/deleteRow", async (req, res) => {
       const deleteQuery = `DELETE FROM ${table} WHERE ${whereClause}`;
       await conn.execute(deleteQuery);
 
-      conn.release();
       return res.status(200).json({ message: "Row deleted successfully" });
     } catch (error) {
       console.error("Error deleting row:", error);
       return res.status(500).json({ error: "Failed to delete row" });
+    } finally {
+      if (conn) conn.release();
     }
   }
 });

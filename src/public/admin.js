@@ -65,33 +65,38 @@ function setupEventListeners() {
       this.classList.add("bg-primary-button", "text-black");
 
       // Switch views
+      // First hide all containers
+      document.getElementById("users-container").classList.add("hidden");
+      document.getElementById("all-files-container").classList.add("hidden");
+      document.getElementById("global-storage-container").classList.add("hidden");
+      document.getElementById("database-container").classList.add("hidden");
+
       if (buttonText === "Users") {
         currentView = "users";
         document.getElementById("users-container").classList.remove("hidden");
-        document.getElementById("all-files-container").classList.add("hidden");
-        document.getElementById("global-storage-container").classList.add("hidden");
         loadUsers();
       } else if (buttonText === "All Files") {
         currentView = "files";
-        document.getElementById("users-container").classList.add("hidden");
-        document
-          .getElementById("all-files-container")
-          .classList.remove("hidden");
-        document.getElementById("global-storage-container").classList.add("hidden");
+        document.getElementById("all-files-container").classList.remove("hidden");
         loadAllFiles();
       } else if (buttonText === "Global Storage") {
         currentView = "storage";
-        document.getElementById("users-container").classList.add("hidden");
-        document.getElementById("all-files-container").classList.add("hidden");
         document.getElementById("global-storage-container").classList.remove("hidden");
-        document.getElementById("database-container").classList.add("hidden");
         loadGlobalStorage();
       } else if (buttonText === "Database") {
         currentView = "database";
-        document.getElementById("users-container").classList.add("hidden");
-        document.getElementById("all-files-container").classList.add("hidden");
-        document.getElementById("global-storage-container").classList.add("hidden");
         document.getElementById("database-container").classList.remove("hidden");
+        // Load tables if not already loaded
+        if (document.getElementById("tableSelector").options.length <= 1) {
+          loadTables();
+        }
+      }
+
+      // Clean up database state when switching away from Database tab
+      if (currentView !== "database" && buttonText !== "Database") {
+        clearTable();
+        selectedRow = null;
+        selectedCell = null;
       }
     });
   });
@@ -1193,22 +1198,33 @@ function showStorageLimitMessage(message, type) {
 // Database management functions
 async function loadTables() {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const response = await fetch("/admin/getTables", {
       method: "GET",
       headers: {
         Authorization: authToken,
       },
+      signal: controller.signal,
     });
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      throw new Error("Failed to load tables");
+      throw new Error(`Failed to load tables: ${response.status} ${response.statusText}`);
     }
 
     const tables = await response.json();
     populateTableSelector(tables);
   } catch (error) {
-    console.error("Error loading tables:", error);
-    showError("Failed to load database tables");
+    if (error.name === 'AbortError') {
+      console.error("Load tables request timed out");
+      showError("Request timed out. Please try again.");
+    } else {
+      console.error("Error loading tables:", error);
+      showError("Failed to load database tables");
+    }
   }
 }
 
@@ -1234,22 +1250,33 @@ async function loadTableData() {
   }
 
   try {
-    const response = await fetch(`/admin/getTableData?table=${currentTable}`, {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout for data loading
+
+    const response = await fetch(`/admin/getTableData?table=${encodeURIComponent(currentTable)}`, {
       method: "GET",
       headers: {
         Authorization: authToken,
       },
+      signal: controller.signal,
     });
 
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      throw new Error("Failed to load table data");
+      throw new Error(`Failed to load table data: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
     displayTableData(data);
   } catch (error) {
-    console.error("Error loading table data:", error);
-    showError("Failed to load table data");
+    if (error.name === 'AbortError') {
+      console.error("Load table data request timed out");
+      showError("Request timed out. The table might be too large. Please try again.");
+    } else {
+      console.error("Error loading table data:", error);
+      showError("Failed to load table data");
+    }
   }
 }
 
