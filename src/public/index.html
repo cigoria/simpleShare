@@ -209,6 +209,27 @@
           <span style="color: #4c73f0">Select</span> files here
         </p>
       </div>
+      <div id="upload-progress-container" class="hidden w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-8 mobile:p-4 flex flex-col items-center justify-center space-y-6 mobile:space-y-4">
+        <div class="w-full">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm mobile:text-xs text-gray-300">Upload Progress</span>
+            <span id="upload-percentage" class="text-sm mobile:text-xs font-medium text-primary-button">0%</span>
+          </div>
+          <div class="w-full bg-gray-700 rounded-full h-3 mobile:h-2 overflow-hidden">
+            <div id="upload-progress-bar" class="h-full bg-gradient-to-r from-primary-button to-secondary-button rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <div class="flex flex-col items-center space-y-2 text-center">
+          <div class="text-lg mobile:text-base text-white">
+            <span id="upload-speed" class="font-red-hat">0 MB/s</span>
+          </div>
+          <div class="text-sm mobile:text-xs text-gray-400">
+            <span id="upload-bytes">0 MB</span> / <span id="upload-total">0 MB</span>
+          </div>
+        </div>
+      </div>
+
       <div id="upload-status-box"
         class="hidden w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-8 mobile:p-4 flex flex-col items-center justify-center">
         <div class="text-center mb-8 mobile:mb-4">

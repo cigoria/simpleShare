@@ -633,16 +633,19 @@ dropZone.addEventListener("click", (event) => {
 
 async function handleFiles(files) {
   document.getElementById("drop_zone").style.display = "none";
-  document.getElementById("upload-status-box").classList.remove("hidden");
-  document.getElementById("upload-status-box").style.display = "flex";
+  document.getElementById("upload-progress-container").classList.remove("hidden");
+  document.getElementById("upload-progress-container").style.display = "flex";
   
-  // Enhanced loading animation
-  document.getElementById("upload-status-symbol").classList.remove("hidden");
-  document.getElementById("upload-status-symbol").classList.add("animate-spin-slow");
-  document.getElementById("upload-status-symbol").innerText = "hourglass_empty";
-  document.getElementById("upload-status-text").classList.remove("hidden");
-  document.getElementById("upload-status-text").classList.add("animate-pulse-slow");
-  document.getElementById("upload-status-text").innerText = "Preparing upload...";
+  const file = files[0];
+  const fileSize = file.size;
+  const fileName = file.name;
+  
+  // Initialize progress display
+  document.getElementById("upload-total").textContent = formatBytes(fileSize);
+  document.getElementById("upload-bytes").textContent = "0 MB";
+  document.getElementById("upload-speed").textContent = "0 MB/s";
+  document.getElementById("upload-percentage").textContent = "0%";
+  document.getElementById("upload-progress-bar").style.width = "0%";
   
   document
     .getElementById("upload-close-btn")
@@ -651,73 +654,58 @@ async function handleFiles(files) {
     });
   
   const formData = new FormData();
-  formData.append("file", files[0]);
+  formData.append("file", file);
 
-  // Update status to show uploading
-  document.getElementById("upload-status-text").innerText = "Uploading file...";
-
-  const response = await fetch("/upload", {
-    method: "POST",
-    headers: {
-      Authorization: `${localStorage.getItem("token")}`,
-    },
-    body: formData,
-  });
-
-  // Update status to show processing
-  document.getElementById("upload-status-text").innerText = "Processing response...";
-  document.getElementById("upload-status-symbol").innerText = "cached";
-
-  if (!response.ok) {
-    const error = await response.json();
-    console.error("Upload failed:", error.error);
-    
-    // Show error state
-    document.getElementById("upload-status-symbol").classList.remove("animate-spin-slow");
-    document.getElementById("upload-status-symbol").innerText = "error";
-    document.getElementById("upload-status-symbol").style.color = "#f77b5e";
-    document.getElementById("upload-status-text").classList.remove("animate-pulse-slow");
-    document.getElementById("upload-status-text").innerText = "Upload failed!";
-    document.getElementById("upload-status-text").style.color = "#f77b5e";
-    
-    document.getElementById("failure-content").classList.remove("hidden");
-    let messageP = document.getElementById("upload-error-message")
-    console.log(response.status);
-    if (response.status == 400) {
-      messageP.innerText = "Bad request!"
-    } else if (response.status == 401) {
-      messageP.innerText= "Unauthorized!";
-    } else if (response.status == 413) {
-      messageP.innerText= "File too large! You ran out of quota!";
-    } else if (response.status == 500) {
-      messageP.innertText="Internal Server Error!";
-    } else {
-      messageP.innerText =
-        "Unknown Error!";
+  // Use XMLHttpRequest for progress tracking
+  const xhr = new XMLHttpRequest();
+  
+  // Track upload progress
+  let lastTime = Date.now();
+  let lastLoaded = 0;
+  
+  xhr.upload.addEventListener('progress', function(e) {
+    if (e.lengthComputable) {
+      const currentTime = Date.now();
+      const timeDiff = (currentTime - lastTime) / 1000; // Convert to seconds
+      const bytesDiff = e.loaded - lastLoaded;
+      
+      // Calculate percentage
+      const percentComplete = Math.round((e.loaded / e.total) * 100);
+      document.getElementById("upload-percentage").textContent = percentComplete + "%";
+      document.getElementById("upload-progress-bar").style.width = percentComplete + "%";
+      
+      // Update bytes uploaded
+      document.getElementById("upload-bytes").textContent = formatBytes(e.loaded);
+      
+      // Calculate upload speed
+      if (timeDiff > 0) {
+        const speedBytesPerSecond = bytesDiff / timeDiff;
+        const speedMBPerSecond = speedBytesPerSecond / (1024 * 1024);
+        document.getElementById("upload-speed").textContent = speedMBPerSecond.toFixed(2) + " MB/s";
+      }
+      
+      lastTime = currentTime;
+      lastLoaded = e.loaded;
     }
-    return;
-  } else {
-    let response_data = await response.json();
-    console.log(response_data);
-
-    // Show success state
-    document.getElementById("upload-status-symbol").classList.remove("animate-spin-slow");
-    document.getElementById("upload-status-symbol").innerText = "check_circle";
-    document.getElementById("upload-status-symbol").style.color = "#5ef78c";
-    document.getElementById("upload-status-text").classList.remove("animate-pulse-slow");
-    document.getElementById("upload-status-text").innerText = "Upload successful!";
-    document.getElementById("upload-status-text").style.color = "#5ef78c";
-
-    // Show success content after a brief delay
-    setTimeout(async () => {
+  });
+  
+  // Handle completion
+  xhr.addEventListener('load', function() {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      // Success - immediately hide progress and show success content
+      document.getElementById("upload-progress-container").classList.add("hidden");
+      document.getElementById("upload-progress-container").style.display = "none";
+      document.getElementById("upload-status-box").classList.add("hidden");
       document.getElementById("success-content").classList.remove("hidden");
+      
+      let response_data = JSON.parse(xhr.responseText);
       document.getElementById("filecode-display").innerText = response_data.code;
 
       const base_url = location.href;
       const full_url = base_url + "files/" + response_data.code;
       document.getElementById("link-text").innerText = full_url;
 
-      // Copy code functionality
+        // Copy code functionality
       document
         .getElementById("filecode-display")
         .addEventListener("click", async (e) => {
@@ -767,9 +755,60 @@ async function handleFiles(files) {
           }
         });
 
-      await updateQuotaDisplay();
-    }, 1000);
-  }
+      updateQuotaDisplay();
+    } else {
+      // Error
+      document.getElementById("upload-progress-container").classList.add("hidden");
+      document.getElementById("upload-status-box").classList.remove("hidden");
+      document.getElementById("upload-status-box").style.display = "flex";
+      
+      // Show error state
+      document.getElementById("upload-status-symbol").classList.remove("hidden");
+      document.getElementById("upload-status-symbol").innerText = "error";
+      document.getElementById("upload-status-symbol").style.color = "#f77b5e";
+      document.getElementById("upload-status-text").classList.remove("hidden");
+      document.getElementById("upload-status-text").innerText = "Upload failed!";
+      document.getElementById("upload-status-text").style.color = "#f77b5e";
+      
+      document.getElementById("failure-content").classList.remove("hidden");
+      let messageP = document.getElementById("upload-error-message");
+      
+      if (xhr.status == 400) {
+        messageP.innerText = "Bad request!"
+      } else if (xhr.status == 401) {
+        messageP.innerText= "Unauthorized!";
+      } else if (xhr.status == 413) {
+        messageP.innerText= "File too large! You ran out of quota!";
+      } else if (xhr.status == 500) {
+        messageP.innerText= "Internal Server Error!";
+      } else {
+        messageP.innerText = "Unknown Error!";
+      }
+    }
+  });
+  
+  // Handle network errors
+  xhr.addEventListener('error', function() {
+    document.getElementById("upload-progress-container").classList.add("hidden");
+    document.getElementById("upload-status-box").classList.remove("hidden");
+    document.getElementById("upload-status-box").style.display = "flex";
+    
+    // Show error state
+    document.getElementById("upload-status-symbol").classList.remove("hidden");
+    document.getElementById("upload-status-symbol").innerText = "error";
+    document.getElementById("upload-status-symbol").style.color = "#f77b5e";
+    document.getElementById("upload-status-text").classList.remove("hidden");
+    document.getElementById("upload-status-text").innerText = "Network error!";
+    document.getElementById("upload-status-text").style.color = "#f77b5e";
+    
+    document.getElementById("failure-content").classList.remove("hidden");
+    document.getElementById("upload-error-message").innerText = "Network error. Please check your connection and try again.";
+  });
+  
+  // Open and send the request
+  xhr.open('POST', '/upload');
+  xhr.setRequestHeader('Authorization', localStorage.getItem("token"));
+  xhr.send(formData);
 }
 
 // Function to show copy feedback
