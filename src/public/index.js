@@ -85,6 +85,114 @@ async function updateQuotaDisplay() {
   document.getElementById("quota-container").classList.remove("hidden");
 }
 
+async function updateGroupsDisplay() {
+  document.getElementById("my-groups-tbody").innerHTML = "";
+
+  let result = await fetch("/getFileGroups", {
+    method: "POST",
+    body: JSON.stringify({ token: localStorage.getItem("token") }),
+    headers: { "Content-type": "application/json; charset=UTF-8" },
+  });
+  
+  if (result.status === 401) {
+    console.log("Unauthorized to fetch groups");
+    return;
+  }
+  
+  let result_json = await result.json();
+  for (let group of result_json) {
+    // Format date to shorter human readable format
+    let formattedDate =
+      new Date(group.created_at).toLocaleDateString("hu-HU", {
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit",
+      }) +
+      " " +
+      new Date(group.created_at).toLocaleTimeString("hu-HU", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+    // Single table row with all columns including action buttons
+    let row = `<tr class="border-b border-[#444] hover:bg-black/20 h-[50px]">
+            <td class="px-4 py-2 align-middle whitespace-nowrap">${group.id}</td>
+            <td class="px-4 py-2 align-middle min-w-[200px]">
+              <div class="flex items-center gap-2">
+                <span class="material-icons text-primary-button">folder</span>
+                <span>${group.name}</span>
+              </div>
+            </td>
+            <td class="px-4 py-2 align-middle whitespace-nowrap">${formattedDate}</td>
+            <td class="px-4 py-2 align-middle whitespace-nowrap">${group.file_ids.length} files</td>
+            <td class="px-2 py-2 text-center align-middle">
+                <button class="download-button bg-secondary-button text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center mx-auto" 
+                        onclick="window.open('/groups/${group.id}', '_blank')" 
+                        title="View Group">
+                    <span class="material-icons-outlined text-lg">folder_open</span>
+                </button>
+            </td>
+            <td class="px-2 py-2 text-center align-middle">
+                <button class="delete-button bg-error text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center mx-auto" 
+                        onclick="deleteGroup('${group.id}')" 
+                        title="Delete Group">
+                    <span class="material-icons-outlined text-lg">delete</span>
+                </button>
+            </td>
+        </tr>`;
+
+    document
+      .getElementById("my-groups-tbody")
+      .insertAdjacentHTML("beforeend", row);
+  }
+}
+
+async function deleteGroup(groupId) {
+  if (!confirm('Are you sure you want to delete this group? This will not delete the individual files.')) {
+    return;
+  }
+
+  // Find the delete button in the table
+  const deleteButtons = document.querySelectorAll('.delete-button');
+  let targetButton = null;
+  deleteButtons.forEach(btn => {
+    if (btn.getAttribute('onclick').includes(groupId)) {
+      targetButton = btn;
+    }
+  });
+
+  if (targetButton) {
+    // Show loading state on the button
+    const originalBtnHTML = targetButton.innerHTML;
+    targetButton.innerHTML = '<span class="material-icons-outlined text-lg animate-spin">refresh</span>';
+    targetButton.disabled = true;
+
+    let result = await fetch("/deleteFileGroup", {
+      method: "POST",
+      body: JSON.stringify({ 
+        token: localStorage.getItem("token"),
+        groupId: groupId 
+      }),
+      headers: { "Content-type": "application/json; charset=UTF-8" },
+    });
+
+    if (result.ok) {
+      // Remove the row from the table
+      const row = targetButton.closest('tr');
+      row.style.opacity = '0';
+      row.style.transform = 'translateX(-20px)';
+      setTimeout(() => {
+        row.remove();
+      }, 300);
+    } else {
+      // Restore button and show error
+      targetButton.innerHTML = originalBtnHTML;
+      targetButton.disabled = false;
+      alert('Failed to delete group');
+    }
+  }
+}
+
 async function updateFilesDisplay() {
   document.getElementById("my-files-tbody").innerHTML = "";
 
@@ -620,6 +728,7 @@ dropZone.addEventListener("click", (event) => {
   dropZone.classList.add("select");
   let input = document.createElement("input");
   input.type = "file";
+  input.multiple = true; // Allow multiple file selection
   input.onchange = (e) => {
     let files = e.target.files;
     handleFiles(files);
@@ -631,17 +740,105 @@ dropZone.addEventListener("click", (event) => {
   input.click();
 });
 
+// Group choice modal event listeners
+document.getElementById('create-group-btn').addEventListener('click', () => {
+  document.getElementById('create-group-btn').classList.add('hidden');
+  document.getElementById('group-name-section').classList.remove('hidden');
+});
+
+document.getElementById('confirm-group-btn').addEventListener('click', () => {
+  const groupName = document.getElementById('modalGroupName').value.trim();
+  if (!groupName) {
+    alert('Please enter a group name');
+    return;
+  }
+  
+  // Hide modal and proceed with group upload
+  document.getElementById('group-choice-background').classList.add('hidden');
+  document.getElementById('group-choice-box').classList.add('hidden');
+  
+  // Set global variables for upload
+  window.uploadChoice = 'group';
+  window.groupName = groupName;
+  
+  // Proceed with upload
+  handleFiles(window.pendingFiles);
+});
+
+document.getElementById('upload-individually-btn').addEventListener('click', () => {
+  // Hide modal and proceed with individual upload
+  document.getElementById('group-choice-background').classList.add('hidden');
+  document.getElementById('group-choice-box').classList.add('hidden');
+  
+  // Set global variables for upload
+  window.uploadChoice = 'individual';
+  
+  // Proceed with upload
+  handleFiles(window.pendingFiles);
+});
+
+document.getElementById('cancel-upload-btn').addEventListener('click', () => {
+  // Hide modal and reset
+  document.getElementById('group-choice-background').classList.add('hidden');
+  document.getElementById('group-choice-box').classList.add('hidden');
+  
+  // Reset modal state
+  document.getElementById('create-group-btn').classList.remove('hidden');
+  document.getElementById('group-name-section').classList.add('hidden');
+  document.getElementById('modalGroupName').value = '';
+  
+  // Clear pending files
+  window.pendingFiles = null;
+});
+
 async function handleFiles(files) {
+  // Check if multiple files were selected and show choice modal if needed
+  if (files.length > 1 && !window.uploadChoice) {
+    // Store files and show modal
+    window.pendingFiles = files;
+    document.getElementById('group-choice-background').classList.remove('hidden');
+    document.getElementById('group-choice-box').classList.remove('hidden');
+    
+    // Reset modal state
+    document.getElementById('create-group-btn').classList.remove('hidden');
+    document.getElementById('group-name-section').classList.add('hidden');
+    document.getElementById('modalGroupName').value = '';
+    
+    return;
+  }
+  
+  // Determine upload type
+  const uploadType = window.uploadChoice || 'individual';
+  const groupName = window.groupName || '';
+  
+  // Reset global variables
+  window.uploadChoice = null;
+  window.groupName = null;
+  window.pendingFiles = null;
+  
+  // Validate group upload
+  if (uploadType === 'group' && !groupName.trim()) {
+    alert('Please enter a group name');
+    return;
+  }
+  
+  if (uploadType === 'group' && files.length === 0) {
+    alert('Please select at least one file for group upload');
+    return;
+  }
+  
   document.getElementById("drop_zone").style.display = "none";
   document.getElementById("upload-progress-container").classList.remove("hidden");
   document.getElementById("upload-progress-container").style.display = "flex";
   
-  const file = files[0];
-  const fileSize = file.size;
-  const fileName = file.name;
+  // Calculate total size for all files
+  let totalSize = 0;
+  for (let file of files) {
+    totalSize += file.size;
+  }
   
   // Initialize progress display
-  document.getElementById("upload-total").textContent = formatBytes(fileSize);
+  document.getElementById("upload-total").textContent = formatBytes(totalSize);
   document.getElementById("upload-bytes").textContent = "0 MB";
   document.getElementById("upload-speed").textContent = "0 MB/s";
   document.getElementById("upload-percentage").textContent = "0%";
@@ -654,8 +851,24 @@ async function handleFiles(files) {
     });
   
   const formData = new FormData();
-  formData.append("file", file);
-
+  
+  // Determine which endpoint to use
+  const isGroupUpload = uploadType === 'group' && files.length > 0;
+  const endpoint = isGroupUpload ? '/upload-group' : '/upload';
+  
+  if (isGroupUpload) {
+    // Add all files for group upload
+    for (let file of files) {
+      formData.append("files", file);
+    }
+    formData.append("groupName", groupName);
+    formData.append("createGroup", "true");
+  } else {
+    // Single file upload (backward compatibility)
+    const file = files[0];
+    formData.append("file", file);
+  }
+  
   // Use XMLHttpRequest for progress tracking
   const xhr = new XMLHttpRequest();
   
@@ -699,40 +912,87 @@ async function handleFiles(files) {
       document.getElementById("success-content").classList.remove("hidden");
       
       let response_data = JSON.parse(xhr.responseText);
-      document.getElementById("filecode-display").innerText = response_data.code;
-
-      const base_url = location.href;
-      const full_url = base_url + "files/" + response_data.code;
-      document.getElementById("link-text").innerText = full_url;
+      
+      if (isGroupUpload) {
+        // Show group success
+        document.getElementById("individual-success").classList.add("hidden");
+        document.getElementById("group-success").classList.remove("hidden");
+        
+        document.getElementById("group-name-display").textContent = response_data.group.name;
+        document.getElementById("group-code-display").textContent = response_data.group.id;
+        
+        // List uploaded files
+        const filesList = document.getElementById("uploaded-files-list");
+        filesList.innerHTML = '';
+        response_data.files.forEach(file => {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'text-sm mobile:text-xs text-gray-300 bg-black/10 p-2 rounded';
+          fileItem.innerHTML = `
+            <span class="font-medium">${file.originalname}</span>
+            <span class="text-gray-400 ml-2">(${formatBytes(file.size)})</span>
+            <span class="text-primary-button font-red-hat ml-2">${file.code}</span>
+          `;
+          filesList.appendChild(fileItem);
+        });
+        
+        const base_url = location.href;
+        const full_url = base_url + "groups/" + response_data.group.id;
+        document.getElementById("group-link-text").innerText = full_url;
+        
+        // Copy group code functionality
+        document.getElementById("group-code-display").addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            await navigator.clipboard.writeText(response_data.group.id);
+            showCopyFeedback(e.target, "Group code copied!");
+          } catch (err) {
+            console.error("Failed to copy:", err);
+          }
+        });
+        
+        // Copy group link functionality
+        document.getElementById("copy-group-link-btn").addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            await navigator.clipboard.writeText(full_url);
+            showCopyFeedback(e.target.closest("button"), "Group link copied!");
+          } catch (err) {
+            console.error("Failed to copy:", err);
+          }
+        });
+        
+        document.getElementById("group-link-text").addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            await navigator.clipboard.writeText(full_url);
+            showCopyFeedback(e.target, "Group link copied!");
+          } catch (err) {
+            console.error("Failed to copy:", err);
+          }
+        });
+      } else {
+        // Show individual success
+        document.getElementById("individual-success").classList.remove("hidden");
+        document.getElementById("group-success").classList.add("hidden");
+        
+        document.getElementById("filecode-display").innerText = response_data.code;
+        const base_url = location.href;
+        const full_url = base_url + "files/" + response_data.code;
+        document.getElementById("link-text").innerText = full_url;
 
         // Copy code functionality
-      document
-        .getElementById("filecode-display")
-        .addEventListener("click", async (e) => {
+        document.getElementById("filecode-display").addEventListener("click", async (e) => {
           e.preventDefault();
           try {
             await navigator.clipboard.writeText(response_data.code);
-
-            // Visual feedback
-            const element = e.target;
-            const originalColor = element.style.color;
-            element.style.color = "#5ef78c";
-            element.style.transform = "scale(1.1)";
-            element.style.transition = "all 0.3s ease";
-
-            setTimeout(() => {
-              element.style.color = originalColor;
-              element.style.transform = "scale(1)";
-            }, 800);
+            showCopyFeedback(e.target, "Code copied!");
           } catch (err) {
             console.error("Failed to copy:", err);
           }
         });
 
-      // Copy link functionality
-      document
-        .getElementById("copy-link-btn")
-        .addEventListener("click", async (e) => {
+        // Copy link functionality
+        document.getElementById("copy-link-btn").addEventListener("click", async (e) => {
           e.preventDefault();
           try {
             await navigator.clipboard.writeText(full_url);
@@ -742,10 +1002,7 @@ async function handleFiles(files) {
           }
         });
 
-      // Copy on click of URL text
-      document
-        .getElementById("link-text")
-        .addEventListener("click", async (e) => {
+        document.getElementById("link-text").addEventListener("click", async (e) => {
           e.preventDefault();
           try {
             await navigator.clipboard.writeText(full_url);
@@ -754,15 +1011,15 @@ async function handleFiles(files) {
             console.error("Failed to copy:", err);
           }
         });
+      }
 
       updateQuotaDisplay();
     } else {
-      // Error
+      // Error handling (same as before)
       document.getElementById("upload-progress-container").classList.add("hidden");
       document.getElementById("upload-status-box").classList.remove("hidden");
       document.getElementById("upload-status-box").style.display = "flex";
       
-      // Show error state
       document.getElementById("upload-status-symbol").classList.remove("hidden");
       document.getElementById("upload-status-symbol").innerText = "error";
       document.getElementById("upload-status-symbol").style.color = "#f77b5e";
@@ -787,13 +1044,12 @@ async function handleFiles(files) {
     }
   });
   
-  // Handle network errors
+  // Handle network errors (same as before)
   xhr.addEventListener('error', function() {
     document.getElementById("upload-progress-container").classList.add("hidden");
     document.getElementById("upload-status-box").classList.remove("hidden");
     document.getElementById("upload-status-box").style.display = "flex";
     
-    // Show error state
     document.getElementById("upload-status-symbol").classList.remove("hidden");
     document.getElementById("upload-status-symbol").innerText = "error";
     document.getElementById("upload-status-symbol").style.color = "#f77b5e";
@@ -805,8 +1061,8 @@ async function handleFiles(files) {
     document.getElementById("upload-error-message").innerText = "Network error. Please check your connection and try again.";
   });
   
-  // Open and send the request
-  xhr.open('POST', '/upload');
+  // Open and send request
+  xhr.open('POST', endpoint);
   xhr.setRequestHeader('Authorization', localStorage.getItem("token"));
   xhr.send(formData);
 }

@@ -494,6 +494,23 @@ const uploadMiddleware = (req, res, next) => {
   });
 };
 
+const multiUploadMiddleware = (req, res, next) => {
+  const limits = {};
+  if (req.maxUploadSize) {
+    limits.fileSize = req.maxUploadSize;
+  }
+
+  const upload = multer({
+    storage: storage,
+    limits: limits,
+  }).array("files");
+
+  upload(req, res, (err) => {
+    if (err) return next(err);
+    next();
+  });
+};
+
 async function authenticateUser(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth) return res.sendStatus(401);
@@ -544,6 +561,42 @@ async function registerUploadInIndex(req) {
       ],
     );
     return !!res;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+async function registerMultipleUploadsInIndex(req) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const uploadedFiles = [];
+    
+    for (let file of req.files) {
+      const fileCode = await generateUniqueFileID(6);
+      let res = await conn.query(
+        "INSERT INTO file_index(id, mime_type, stored_filename, original_name, file_size_in_bytes, user_id) VALUES (?,?,?,?,?,?)",
+        [
+          fileCode,
+          file.mimetype,
+          file.filename,
+          file.originalname,
+          file.size,
+          req.user.id,
+        ]
+      );
+      
+      if (res) {
+        uploadedFiles.push({
+          code: fileCode,
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size
+        });
+      }
+    }
+    
+    return uploadedFiles;
   } finally {
     if (conn) conn.release();
   }
@@ -600,6 +653,63 @@ async function deleteFile(file_code) {
   }
 }
 
+async function createFileGroup(groupName, fileIds, userId) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const groupId = await generateUniqueFileID(6);
+    
+    let res = await conn.query(
+      "INSERT INTO file_groups(id, name, file_ids, user_id) VALUES (?,?,?,?)",
+      [groupId, groupName, JSON.stringify(fileIds), userId]
+    );
+    return !!res ? groupId : null;
+  } finally {
+    if (conn) conn.release();
+  }
+}
+
+async function getUserFileGroups(userId) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    let results = await conn.query(
+      "SELECT * FROM file_groups WHERE user_id = ? ORDER BY created_at DESC",
+      [userId]
+    );
+    let return_list = [];
+    for (let group of results) {
+      return_list.push({
+        id: group.id,
+        name: group.name,
+        file_ids: JSON.parse(group.file_ids),
+        created_at: group.created_at
+      });
+    }
+    return return_list;
+  } finally {
+    if (conn) {
+      conn.release();
+    }
+  }
+}
+
+async function deleteFileGroup(groupId, userId) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    let result = await conn.query(
+      "DELETE FROM file_groups WHERE id = ? AND user_id = ?",
+      [groupId, userId]
+    );
+    return result.affectedRows > 0;
+  } finally {
+    if (conn) {
+      conn.release();
+    }
+  }
+}
+
 const storage = multer.diskStorage({
   destination: process.env.UPLOAD_PATH || "./uploads",
   filename: function (req, file, cb) {
@@ -649,6 +759,142 @@ app.get("/files/:file_code", async (req, res) => {
     
     const filePath = path.join(__dirname, process.env.UPLOAD_PATH || './uploads/', stored_name);
     return res.download(filePath, original_name);
+  }
+});
+
+app.get("/groups/:group_id", async (req, res) => {
+  let group_id = req.params.group_id;
+  if (group_id.length !== 6) {
+    return res.sendStatus(400);
+  }
+  let regex = /\d/;
+  if (regex.test(group_id)) {
+    return res.sendStatus(400);
+  }
+  
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    let group_result = await conn.query("SELECT * FROM file_groups WHERE id = ?", [group_id]);
+    
+    if (group_result.length === 0) {
+      return res.sendStatus(404);
+    }
+    
+    let group = group_result[0];
+    let file_ids = JSON.parse(group.file_ids);
+    let files = [];
+    
+    for (let file_id of file_ids) {
+      let file_info = await retrieveFileInfo(file_id);
+      if (file_info) {
+        files.push({
+          id: file_info.id,
+          original_name: file_info.original_name,
+          file_size_in_bytes: file_info.file_size_in_bytes,
+          mime_type: file_info.mime_type,
+          date_added: file_info.date_added
+        });
+      }
+    }
+    
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>File Group - ${group.name}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+          tailwind.config = {
+            theme: {
+              extend: {
+                colors: {
+                  "primary-button": "#6792ff",
+                  "secondary-button": "#5ef78c",
+                  bg: "#181818",
+                  text: "#ffffff",
+                  input: "#d9d9d9",
+                  ok: "#5ef78c",
+                  danger: "#f7e15e",
+                  error: "#f77b5e",
+                  main: "#1f1f1f",
+                },
+                fontFamily: {
+                  inter: ["Inter", "sans-serif"],
+                  "red-hat": ["Red Hat Mono", "monospace"],
+                },
+              },
+            },
+          };
+        </script>
+      </head>
+      <body class="m-0 p-0 bg-bg text-white font-inter flex justify-center items-center min-h-screen">
+        <div class="container mx-auto px-4 py-8 max-w-4xl">
+          <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-2">
+              <span class="bg-gradient-to-r from-primary-button to-secondary-button bg-clip-text text-transparent">File Group</span>
+            </h1>
+            <h2 class="text-2xl text-gray-300">${group.name}</h2>
+            <p class="text-sm text-gray-400 mt-2">Group ID: <span class="font-red-hat text-primary-button">${group_id}</span></p>
+          </div>
+          
+          <div class="bg-black/20 backdrop-blur-[20px] rounded-xl border border-[#444] p-6">
+            <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+              <span class="material-icons">folder</span>
+              Files (${files.length})
+            </h3>
+            
+            <div class="space-y-3">
+              ${files.map(file => `
+                <div class="flex items-center justify-between p-4 bg-black/10 rounded-lg border border-[#333] hover:border-primary-button/50 transition-colors">
+                  <div class="flex items-center gap-3">
+                    <span class="material-icons text-primary-button">insert_drive_file</span>
+                    <div>
+                      <p class="font-medium">${file.original_name}</p>
+                      <p class="text-sm text-gray-400">${formatBytes(file.file_size_in_bytes)} • ${new Date(file.date_added).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <a href="/files/${file.id}" download class="bg-primary-button text-black px-4 py-2 rounded-lg hover:scale-105 transition-transform flex items-center gap-2">
+                    <span class="material-icons text-sm">download</span>
+                    Download
+                  </a>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="text-center mt-8">
+            <a href="/" class="text-primary-button hover:text-secondary-button transition-colors flex items-center gap-2 justify-center">
+              <span class="material-icons">arrow_back</span>
+              Back to simpleShare
+            </a>
+          </div>
+        </div>
+        
+        <script>
+          function formatBytes(bytes) {
+            if (bytes === 0) return "0 B";
+            const units = ["B", "kB", "MB", "GB", "TB"];
+            const threshold = 1024;
+            let unitIndex = 0;
+            let size = bytes;
+            while (size >= threshold && unitIndex < units.length - 1) {
+              size /= threshold;
+              unitIndex++;
+            }
+            return \`\${size.toFixed(1)} \${units[unitIndex]}\`;
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  } finally {
+    if (conn) conn.release();
   }
 });
 
@@ -1012,6 +1258,86 @@ app.post(
     }
   },
 );
+
+app.post(
+  "/upload-group",
+  authenticateUser,
+  prepareUploadContext,
+  multiUploadMiddleware,
+  async (req, res) => {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: "No files provided" });
+    }
+
+    const { groupName, createGroup } = req.body;
+    
+    try {
+      const uploadedFiles = await registerMultipleUploadsInIndex(req);
+      
+      if (uploadedFiles.length === 0) {
+        return res.status(500).json({ error: "Database registration failed" });
+      }
+
+      let groupId = null;
+      if (createGroup && groupName) {
+        const fileIds = uploadedFiles.map(file => file.code);
+        groupId = await createFileGroup(groupName, fileIds, req.user.id);
+        
+        if (!groupId) {
+          return res.status(500).json({ error: "Failed to create file group" });
+        }
+      }
+
+      res.status(200).json({
+        error: null,
+        message: "Successfully uploaded files!",
+        files: uploadedFiles,
+        group: groupId ? {
+          id: groupId,
+          name: groupName
+        } : null
+      });
+    } catch (error) {
+      console.error("Upload group error:", error);
+      res.status(500).json({ error: "Upload failed" });
+    }
+  },
+);
+
+app.post("/getFileGroups", async (req, res) => {
+  if (!req.body.token) return res.sendStatus(400);
+  let token = req.body.token;
+  let user_id = await validateToken(token);
+  if ((await getPermissions(token)) === "none" || !user_id) {
+    return res.sendStatus(401);
+  }
+  
+  let results = await getUserFileGroups(user_id);
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  return res.status(200).json(results);
+});
+
+app.post("/deleteFileGroup", async (req, res) => {
+  if (!req.body.token) return res.sendStatus(400);
+  let token = req.body.token;
+  let user_id = await validateToken(token);
+  if ((await getPermissions(token)) === "none" || !user_id) {
+    return res.sendStatus(401);
+  }
+  
+  const { groupId } = req.body;
+  if (!groupId) {
+    return res.status(400).json({ error: "Group ID is required" });
+  }
+  
+  let result = await deleteFileGroup(groupId, user_id);
+  if (result) {
+    res.status(200).json({ message: "File group deleted successfully" });
+  } else {
+    res.status(404).json({ error: "File group not found" });
+  }
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
