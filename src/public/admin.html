@@ -164,13 +164,33 @@
         </div>
       </div>
 
-      <!-- Table selector -->
-      <div class="mb-6">
-        <label class="block text-gray-300 text-sm font-medium mb-2">Select Table:</label>
-        <select id="tableSelector" onchange="loadTableData()" 
-                class="bg-black/30 border border-[#444] text-white px-4 py-2 rounded-lg focus:outline-none focus:border-primary-button">
-          <option value="">Loading tables...</option>
-        </select>
+      <!-- Table selector and search controls -->
+      <div class="mb-6 flex flex-col sm:flex-row gap-4">
+        <div class="flex-1">
+          <label class="block text-gray-300 text-sm font-medium mb-2">Select Table:</label>
+          <select id="tableSelector" onchange="loadTableData()" 
+                  class="bg-black/30 border border-[#444] text-white px-4 py-2 rounded-lg focus:outline-none focus:border-primary-button w-full">
+            <option value="">Loading tables...</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="block text-gray-300 text-sm font-medium mb-2">Search Table Data:</label>
+          <div class="relative">
+            <span class="material-icons-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+            <input type="text" 
+                   id="databaseSearchInput" 
+                   placeholder="Search all columns..." 
+                   class="w-full pl-10 pr-4 py-2 bg-black/30 border border-[#444] rounded-lg text-white focus:border-primary-button focus:outline-none"
+                   oninput="filterTableData()">
+          </div>
+        </div>
+        <div class="flex items-end">
+          <select id="databaseSortSelect" 
+                  onchange="sortTableData()" 
+                  class="bg-black/30 border border-[#444] text-white px-4 py-2 rounded-lg focus:outline-none focus:border-primary-button">
+            <option value="">No sorting</option>
+          </select>
+        </div>
       </div>
 
       <!-- Database table -->

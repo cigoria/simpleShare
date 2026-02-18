@@ -154,21 +154,67 @@ function displayUsers(users) {
   container.innerHTML = `
         <div class="w-full max-w-6xl mx-auto p-6">
             <h2 class="text-2xl font-bold mb-6 text-white">User Management</h2>
+            
+            <!-- Search and controls -->
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+              <div class="flex-1">
+                <div class="relative">
+                  <span class="material-icons-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+                  <input type="text" 
+                         id="userSearchInput" 
+                         placeholder="Search users by username, admin status, or quota..." 
+                         class="w-full pl-10 pr-4 py-2 bg-black/30 border border-[#444] rounded-lg text-white focus:border-primary-button focus:outline-none"
+                         oninput="filterUsers()">
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <select id="userSortSelect" 
+                        onchange="sortUsers()" 
+                        class="bg-black/30 border border-[#444] text-white px-4 py-2 rounded-lg focus:outline-none focus:border-primary-button">
+                  <option value="username-asc">Username (A-Z)</option>
+                  <option value="username-desc">Username (Z-A)</option>
+                  <option value="admin-desc">Admin First</option>
+                  <option value="admin-asc">User First</option>
+                  <option value="quota-desc">Quota (High to Low)</option>
+                  <option value="quota-asc">Quota (Low to High)</option>
+                  <option value="files-desc">Files (Most to Least)</option>
+                  <option value="files-asc">Files (Least to Most)</option>
+                  <option value="date-desc">Created (Newest)</option>
+                  <option value="date-asc">Created (Oldest)</option>
+                </select>
+                <button onclick="loadUsers()" 
+                        class="bg-primary-button text-black px-4 py-2 rounded-lg hover:bg-primary-button/80 transition-colors flex items-center gap-2">
+                  <span class="material-icons text-sm">refresh</span>
+                  Refresh
+                </button>
+              </div>
+            </div>
+            
             <div class="bg-black/20 backdrop-blur-[20px] rounded-xl border border-[#444] overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-black/30">
                             <tr>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Username</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Admin</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Quota</th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortUsersByColumn('username')">
+                                  Username <span class="text-xs text-gray-400">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortUsersByColumn('is_admin')">
+                                  Admin <span class="text-xs text-gray-400">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortUsersByColumn('quota')">
+                                  Quota <span class="text-xs text-gray-400">↕</span>
+                                </th>
                                 <th class="px-4 py-3 text-left text-white border-b border-[#444]">Used</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Files</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Created</th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortUsersByColumn('file_count')">
+                                  Files <span class="text-xs text-gray-400">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortUsersByColumn('creation_date')">
+                                  Created <span class="text-xs text-gray-400">↕</span>
+                                </th>
                                 <th class="px-4 py-3 text-center text-white border-b border-[#444]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="usersTableBody">
                             ${users.map((user) => createUserRow(user)).join("")}
                         </tbody>
                     </table>
@@ -176,6 +222,9 @@ function displayUsers(users) {
             </div>
         </div>
     `;
+  
+  // Store users data for filtering and sorting
+  window.currentUsers = users;
 }
 
 function createUserRow(user) {
@@ -336,21 +385,69 @@ function displayAllFiles(files) {
   container.innerHTML = `
         <div class="w-full max-w-6xl mx-auto p-6">
             <h2 class="text-2xl font-bold mb-6 text-white">All Files</h2>
+            
+            <!-- Search and controls -->
+            <div class="mb-6 flex flex-col sm:flex-row gap-4">
+              <div class="flex-1">
+                <div class="relative">
+                  <span class="material-icons-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+                  <input type="text" 
+                         id="fileSearchInput" 
+                         placeholder="Search files by code, filename, owner, type, or size..." 
+                         class="w-full pl-10 pr-4 py-2 bg-black/30 border border-[#444] rounded-lg text-white focus:border-primary-button focus:outline-none"
+                         oninput="filterFiles()">
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <select id="fileSortSelect" 
+                        onchange="sortFiles()" 
+                        class="bg-black/30 border border-[#444] text-white px-4 py-2 rounded-lg focus:outline-none focus:border-primary-button">
+                  <option value="filename-asc">Filename (A-Z)</option>
+                  <option value="filename-desc">Filename (Z-A)</option>
+                  <option value="owner-asc">Owner (A-Z)</option>
+                  <option value="owner-desc">Owner (Z-A)</option>
+                  <option value="size-desc">Size (Largest)</option>
+                  <option value="size-asc">Size (Smallest)</option>
+                  <option value="type-asc">Type (A-Z)</option>
+                  <option value="type-desc">Type (Z-A)</option>
+                  <option value="date-desc">Date (Newest)</option>
+                  <option value="date-asc">Date (Oldest)</option>
+                </select>
+                <button onclick="loadAllFiles()" 
+                        class="bg-primary-button text-black px-4 py-2 rounded-lg hover:bg-primary-button/80 transition-colors flex items-center gap-2">
+                  <span class="material-icons text-sm">refresh</span>
+                  Refresh
+                </button>
+              </div>
+            </div>
+            
             <div class="bg-black/20 backdrop-blur-[20px] rounded-xl border border-[#444] overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-black/30">
                             <tr>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Code</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Filename</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Owner</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Size</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Type</th>
-                                <th class="px-4 py-3 text-left text-white border-b border-[#444]">Date</th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortFilesByColumn('id')">
+                                  Code <span class="text-xs text-gray-400">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortFilesByColumn('originalname')">
+                                  Filename <span class="text-xs text-gray-400">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortFilesByColumn('username')">
+                                  Owner <span class="text-xs text-gray-400">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortFilesByColumn('size')">
+                                  Size <span class="text-xs text-gray-400">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortFilesByColumn('mimetype')">
+                                  Type <span class="text-xs text-gray-400">↕</span>
+                                </th>
+                                <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" onclick="sortFilesByColumn('date_added')">
+                                  Date <span class="text-xs text-gray-400">↕</span>
+                                </th>
                                 <th class="px-4 py-3 text-center text-white border-b border-[#444]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="filesTableBody">
                             ${files.map((file) => createFileRow(file)).join("")}
                         </tbody>
                     </table>
@@ -358,6 +455,9 @@ function displayAllFiles(files) {
             </div>
         </div>
     `;
+  
+  // Store files data for filtering and sorting
+  window.currentFiles = files;
 }
 
 function displayGlobalStorage(stats) {
@@ -1288,20 +1388,41 @@ async function loadTableData() {
 function displayTableData(data) {
   const header = document.getElementById("tableHeader");
   const body = document.getElementById("tableBody");
+  const sortSelect = document.getElementById("databaseSortSelect");
 
   if (!header || !body) return;
 
   if (!data.columns || !data.rows) {
     header.innerHTML = '<tr><th class="px-4 py-3 text-left text-white border-b border-[#444]">No data</th></tr>';
     body.innerHTML = '<tr><td class="px-4 py-3 text-white">No data available</td></tr>';
+    if (sortSelect) sortSelect.innerHTML = '<option value="">No sorting</option>';
     return;
   }
 
-  // Create headers
+  // Store table data for filtering and sorting
+  window.currentTableData = data;
+  
+  // Update sort select options
+  if (sortSelect) {
+    sortSelect.innerHTML = `
+      <option value="">No sorting</option>
+      ${data.columns.map((col, index) => 
+        `<option value="${index}-asc">${col} (A-Z)</option>
+         <option value="${index}-desc">${col} (Z-A)</option>`
+      ).join('')}
+    `;
+  }
+
+  // Create headers with click-to-sort functionality
   header.innerHTML = `
     <tr>
       <th class="px-4 py-3 text-left text-white border-b border-[#444]">#</th>
-      ${data.columns.map(col => `<th class="px-4 py-3 text-left text-white border-b border-[#444]">${col}</th>`).join('')}
+      ${data.columns.map((col, index) => `
+        <th class="px-4 py-3 text-left text-white border-b border-[#444] cursor-pointer hover:bg-black/10" 
+            onclick="sortTableByColumn(${index})" title="Click to sort">
+          ${col} <span class="text-xs text-gray-400">↕</span>
+        </th>
+      `).join('')}
     </tr>
   `;
 
@@ -1699,4 +1820,352 @@ function hideLoading() {
   if (loading) {
     loading.remove();
   }
+}
+
+// User filtering and sorting functions
+function filterUsers() {
+  if (!window.currentUsers) return;
+  
+  const searchTerm = document.getElementById('userSearchInput').value.toLowerCase();
+  const filteredUsers = window.currentUsers.filter(user => {
+    const username = user.username.toLowerCase();
+    const adminStatus = user.is_admin ? 'admin' : 'user';
+    const quota = user.quota === 0 ? 'unlimited' : formatBytes(user.quota).toLowerCase();
+    const fileCount = user.files.length.toString();
+    
+    return username.includes(searchTerm) || 
+           adminStatus.includes(searchTerm) || 
+           quota.includes(searchTerm) ||
+           fileCount.includes(searchTerm);
+  });
+  
+  displayFilteredUsers(filteredUsers);
+}
+
+function sortUsers() {
+  if (!window.currentUsers) return;
+  
+  const sortValue = document.getElementById('userSortSelect').value;
+  const [field, direction] = sortValue.split('-');
+  
+  const sortedUsers = [...window.currentUsers].sort((a, b) => {
+    let aVal, bVal;
+    
+    switch(field) {
+      case 'username':
+        aVal = a.username.toLowerCase();
+        bVal = b.username.toLowerCase();
+        break;
+      case 'admin':
+        aVal = a.is_admin ? 1 : 0;
+        bVal = b.is_admin ? 1 : 0;
+        break;
+      case 'quota':
+        aVal = a.quota;
+        bVal = b.quota;
+        break;
+      case 'files':
+        aVal = a.files.length;
+        bVal = b.files.length;
+        break;
+      case 'date':
+        aVal = new Date(a.creation_date);
+        bVal = new Date(b.creation_date);
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  displayFilteredUsers(sortedUsers);
+}
+
+function sortUsersByColumn(column) {
+  if (!window.currentUsers) return;
+  
+  // Toggle sort direction
+  const currentSort = window.currentUsersSort || { column: null, direction: 'asc' };
+  let direction = 'asc';
+  
+  if (currentSort.column === column && currentSort.direction === 'asc') {
+    direction = 'desc';
+  }
+  
+  window.currentUsersSort = { column, direction };
+  
+  const sortedUsers = [...window.currentUsers].sort((a, b) => {
+    let aVal, bVal;
+    
+    switch(column) {
+      case 'username':
+        aVal = a.username.toLowerCase();
+        bVal = b.username.toLowerCase();
+        break;
+      case 'is_admin':
+        aVal = a.is_admin ? 1 : 0;
+        bVal = b.is_admin ? 1 : 0;
+        break;
+      case 'quota':
+        aVal = a.quota;
+        bVal = b.quota;
+        break;
+      case 'file_count':
+        aVal = a.files.length;
+        bVal = b.files.length;
+        break;
+      case 'creation_date':
+        aVal = new Date(a.creation_date);
+        bVal = new Date(b.creation_date);
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  displayFilteredUsers(sortedUsers);
+}
+
+function displayFilteredUsers(users) {
+  const tbody = document.getElementById('usersTableBody');
+  if (tbody) {
+    tbody.innerHTML = users.map((user) => createUserRow(user)).join("");
+  }
+}
+
+// File filtering and sorting functions
+function filterFiles() {
+  if (!window.currentFiles) return;
+  
+  const searchTerm = document.getElementById('fileSearchInput').value.toLowerCase();
+  const filteredFiles = window.currentFiles.filter(file => {
+    const code = file.id.toLowerCase();
+    const filename = file.originalname.toLowerCase();
+    const owner = file.username.toLowerCase();
+    const type = file.mimetype.toLowerCase();
+    const size = formatBytes(file.size).toLowerCase();
+    
+    return code.includes(searchTerm) || 
+           filename.includes(searchTerm) || 
+           owner.includes(searchTerm) || 
+           type.includes(searchTerm) ||
+           size.includes(searchTerm);
+  });
+  
+  displayFilteredFiles(filteredFiles);
+}
+
+function sortFiles() {
+  if (!window.currentFiles) return;
+  
+  const sortValue = document.getElementById('fileSortSelect').value;
+  const [field, direction] = sortValue.split('-');
+  
+  const sortedFiles = [...window.currentFiles].sort((a, b) => {
+    let aVal, bVal;
+    
+    switch(field) {
+      case 'filename':
+        aVal = a.originalname.toLowerCase();
+        bVal = b.originalname.toLowerCase();
+        break;
+      case 'owner':
+        aVal = a.username.toLowerCase();
+        bVal = b.username.toLowerCase();
+        break;
+      case 'size':
+        aVal = a.size;
+        bVal = b.size;
+        break;
+      case 'type':
+        aVal = a.mimetype.toLowerCase();
+        bVal = b.mimetype.toLowerCase();
+        break;
+      case 'date':
+        aVal = new Date(a.date_added);
+        bVal = new Date(b.date_added);
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  displayFilteredFiles(sortedFiles);
+}
+
+function sortFilesByColumn(column) {
+  if (!window.currentFiles) return;
+  
+  // Toggle sort direction
+  const currentSort = window.currentFilesSort || { column: null, direction: 'asc' };
+  let direction = 'asc';
+  
+  if (currentSort.column === column && currentSort.direction === 'asc') {
+    direction = 'desc';
+  }
+  
+  window.currentFilesSort = { column, direction };
+  
+  const sortedFiles = [...window.currentFiles].sort((a, b) => {
+    let aVal, bVal;
+    
+    switch(column) {
+      case 'id':
+        aVal = a.id.toLowerCase();
+        bVal = b.id.toLowerCase();
+        break;
+      case 'originalname':
+        aVal = a.originalname.toLowerCase();
+        bVal = b.originalname.toLowerCase();
+        break;
+      case 'username':
+        aVal = a.username.toLowerCase();
+        bVal = b.username.toLowerCase();
+        break;
+      case 'size':
+        aVal = a.size;
+        bVal = b.size;
+        break;
+      case 'mimetype':
+        aVal = a.mimetype.toLowerCase();
+        bVal = b.mimetype.toLowerCase();
+        break;
+      case 'date_added':
+        aVal = new Date(a.date_added);
+        bVal = new Date(b.date_added);
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  displayFilteredFiles(sortedFiles);
+}
+
+function displayFilteredFiles(files) {
+  const tbody = document.getElementById('filesTableBody');
+  if (tbody) {
+    tbody.innerHTML = files.map((file) => createFileRow(file)).join("");
+  }
+}
+
+// Database filtering and sorting functions
+function filterTableData() {
+  if (!window.currentTableData) return;
+  
+  const searchTerm = document.getElementById('databaseSearchInput').value.toLowerCase();
+  if (!searchTerm) {
+    // If search is empty, show all data
+    displayFilteredTableData(window.currentTableData);
+    return;
+  }
+  
+  const filteredRows = window.currentTableData.rows.filter(row => {
+    return row.some(cell => {
+      const cellValue = cell === null ? 'null' : String(cell).toLowerCase();
+      return cellValue.includes(searchTerm);
+    });
+  });
+  
+  const filteredData = {
+    columns: window.currentTableData.columns,
+    rows: filteredRows
+  };
+  
+  displayFilteredTableData(filteredData);
+}
+
+function sortTableData() {
+  if (!window.currentTableData) return;
+  
+  const sortValue = document.getElementById('databaseSortSelect').value;
+  if (!sortValue) {
+    displayFilteredTableData(window.currentTableData);
+    return;
+  }
+  
+  const [columnIndex, direction] = sortValue.split('-');
+  const colIndex = parseInt(columnIndex);
+  
+  const sortedRows = [...window.currentTableData.rows].sort((a, b) => {
+    const aVal = a[colIndex] === null ? '' : String(a[colIndex]).toLowerCase();
+    const bVal = b[colIndex] === null ? '' : String(b[colIndex]).toLowerCase();
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  const sortedData = {
+    columns: window.currentTableData.columns,
+    rows: sortedRows
+  };
+  
+  displayFilteredTableData(sortedData);
+}
+
+function sortTableByColumn(columnIndex) {
+  if (!window.currentTableData) return;
+  
+  // Toggle sort direction
+  const currentSort = window.currentTableSort || { column: null, direction: 'asc' };
+  let direction = 'asc';
+  
+  if (currentSort.column === columnIndex && currentSort.direction === 'asc') {
+    direction = 'desc';
+  }
+  
+  window.currentTableSort = { column: columnIndex, direction };
+  
+  const sortedRows = [...window.currentTableData.rows].sort((a, b) => {
+    const aVal = a[columnIndex] === null ? '' : String(a[columnIndex]).toLowerCase();
+    const bVal = b[columnIndex] === null ? '' : String(b[columnIndex]).toLowerCase();
+    
+    if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+  
+  const sortedData = {
+    columns: window.currentTableData.columns,
+    rows: sortedRows
+  };
+  
+  displayFilteredTableData(sortedData);
+}
+
+function displayFilteredTableData(data) {
+  const body = document.getElementById("tableBody");
+  if (!body) return;
+  
+  // Create rows
+  body.innerHTML = data.rows.map((row, index) => `
+    <tr class="border-b border-[#444] hover:bg-black/10 transition-colors cursor-pointer" 
+        onclick="selectRow(this, ${index})">
+      <td class="px-4 py-3 text-white font-medium">${index + 1}</td>
+      ${row.map((cell, cellIndex) => `
+        <td class="px-4 py-3 text-white font-mono text-sm" 
+            onclick="selectCell(event, this, ${index}, ${cellIndex})" 
+            contenteditable="true"
+            data-original-value="${cell === null ? '' : cell}">
+          ${cell === null ? '<span class="text-gray-500">NULL</span>' : cell}
+        </td>
+      `).join('')}
+    </tr>
+  `).join('');
 }
