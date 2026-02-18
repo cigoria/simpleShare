@@ -515,18 +515,30 @@ async function checkFileExists() {
           let filename = result.filename;
           fileInfoElement.textContent = filename;
           fileInfoElement.style.color = "#5ef78c";
+          // Enable download button when file exists
+          downloadBtn.disabled = false;
+          downloadBtn.classList.remove("opacity-50", "cursor-not-allowed");
         } else {
           fileInfoElement.textContent = "File not found";
           fileInfoElement.style.color = "#f77b5e";
+          // Disable download button when file doesn't exist
+          downloadBtn.disabled = true;
+          downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
         }
       } else {
         fileInfoElement.textContent = "Check ID";
         fileInfoElement.style.color = "#f77b5e";
+        // Disable download button on error
+        downloadBtn.disabled = true;
+        downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
       }
     } catch (error) {
       console.error("Error checking file:", error);
       fileInfoElement.textContent = "Network error";
       fileInfoElement.style.color = "#f77b5e";
+      // Disable download button on network error
+      downloadBtn.disabled = true;
+      downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
     }
   } else {
     // Hide text and remove margin when not 6 characters
@@ -534,16 +546,42 @@ async function checkFileExists() {
     fileInfoElement.classList.remove("opacity-100");
     fileInfoElement.classList.add("opacity-0");
     downloadBtn.classList.remove("mb-5");
+    // Disable download button when code is incomplete
+    downloadBtn.disabled = true;
+    downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
   }
 }
 
 inputs[0].focus();
+
+// Initialize download button state
+const downloadBtn = document.getElementById("download-btn");
+downloadBtn.disabled = true;
+downloadBtn.classList.add("opacity-50", "cursor-not-allowed");
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   const fullCode = Array.from(inputs)
     .map((input) => input.value)
     .join("");
+  
+  // Check if download button is disabled (file doesn't exist)
+  const downloadBtn = document.getElementById("download-btn");
+  if (downloadBtn.disabled) {
+    // Error animation for disabled state
+    inputs.forEach((input, index) => {
+      setTimeout(() => {
+        input.classList.add("animate-shake");
+        input.style.backgroundColor = "#f77b5e";
+        setTimeout(() => {
+          input.classList.remove("animate-shake");
+          input.style.backgroundColor = "";
+        }, 500);
+      }, index * 30);
+    });
+    return; // Prevent download
+  }
+  
   if (fullCode.length === 6) {
     // Success animation
     inputs.forEach((input, index) => {
