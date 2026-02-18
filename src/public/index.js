@@ -956,7 +956,6 @@ async function handleFiles(files) {
         document.getElementById("individual-success").classList.add("hidden");
         document.getElementById("group-success").classList.remove("hidden");
         
-        document.getElementById("group-name-display").textContent = response_data.group.name;
         document.getElementById("group-code-display").textContent = response_data.group.id;
         
         // List uploaded files
