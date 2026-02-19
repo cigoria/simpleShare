@@ -2,10 +2,10 @@
   "name": "simpleshare",
   "version": "1.0.0",
   "scripts": {
-    "dev": "cd src/frontend && vite",
-    "build": "cd src/frontend && vite build",
-    "preview": "cd src/frontend && vite preview",
-    "start": "node src/server.js"
+    "dev": "cd src && vite",
+    "build": "cd src && vite build",
+    "preview": "cd src && vite preview",
+    "start": "node server.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
