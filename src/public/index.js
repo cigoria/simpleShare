@@ -862,6 +862,7 @@ function showCopyFeedback(element, message) {
     tooltip.style.backgroundColor = "";
     tooltip.style.color = "";
   }, 2000);
+  return;
 }
 
 document
@@ -869,60 +870,94 @@ document
   .addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    // Show confirmation popup
-    const confirmed = confirm(
-      "WARNING: This will log out all logged in instances! Are you sure you want to continue?",
-    );
-    if (!confirmed) {
-      return; // User cancelled the operation
-    }
 
     const old_password = document.getElementById("old-password").value;
     const new_password = document.getElementById("new-password").value;
+    const new_password_2 = document.getElementById("new-password-2").value;
     const submitBtn = document.getElementById("change-password-button");
     const errorLabel = document.getElementById("change-password-error-label");
     const successLabel = document.getElementById("change-password-success-label");
-
-    // Clear previous messages
-    errorLabel.innerText = "";
-    successLabel.innerText = "";
-
-    // Show loading state
-    const originalBtnText = submitBtn.textContent;
-    submitBtn.innerHTML = '<span class="material-icons-outlined animate-spin-slow mr-2">hourglass_empty</span>Changing...';
-    submitBtn.disabled = true;
-    submitBtn.classList.add("opacity-75", "cursor-not-allowed");
-
-    try {
-      const response = await fetch("/userChangePassword", {
-        method: "POST",
-        body: JSON.stringify({
-          token: localStorage.getItem("token"),
-          cur_password: old_password,
-          new_password: new_password,
-        }),
-        headers: { "Content-type": "application/json; charset=UTF-8" },
-      });
-      const json = await response.json();
+    
+    if (new_password !== new_password_2) {
+      submitBtn.innerHTML = '<span class="material-icons-outlined mr-2">error</span>Failed';
+      submitBtn.style.backgroundColor = "#f77b5e";
+      errorLabel.innerText = "The new passwords should match each other";
       
-      if (response.status === 200) {
-        // Show success state briefly
-        submitBtn.innerHTML = '<span class="material-icons-outlined mr-2">check_circle</span>Success!';
-        submitBtn.style.backgroundColor = "#5ef78c";
-        successLabel.innerText = json.message;
+      // Reset button after delay
+      setTimeout(() => {
+        submitBtn.style.backgroundColor = "#6792ff";
+        submitBtn.innerHTML = '';
+        submitBtn.innerText = 'Change'
+
+        return;
+      }, 2000);
+    }
+    else {
+        // Show confirmation popup
+      const confirmed = confirm(
+        "WARNING: This will log out all logged in instances! Are you sure you want to continue?",
+      );
+      if (!confirmed) {
+        return; // User cancelled the operation
+      }
+
+      // Clear previous messages
+      errorLabel.innerText = "";
+      successLabel.innerText = "";
+
+      // Show loading state
+      const originalBtnText = submitBtn.textContent;
+      submitBtn.innerHTML = '<span class="material-icons-outlined animate-spin-slow mr-2">hourglass_empty</span>Changing...';
+      submitBtn.disabled = true;
+      submitBtn.classList.add("opacity-75", "cursor-not-allowed");
+      
+      
+
+      try {
+        const response = await fetch("/userChangePassword", {
+          method: "POST",
+          body: JSON.stringify({
+            token: localStorage.getItem("token"),
+            cur_password: old_password,
+            new_password: new_password,
+          }),
+          headers: { "Content-type": "application/json; charset=UTF-8" },
+        });
+        const json = await response.json();
         
-        // Clear form
-        document.getElementById("old-password").value = "";
-        document.getElementById("new-password").value = "";
-        
-        setTimeout(() => {
-          location.reload();
-        }, 1500);
-      } else {
-        // Show error state
-        submitBtn.innerHTML = '<span class="material-icons-outlined mr-2">error</span>Failed';
+        if (response.status === 200) {
+          // Show success state briefly
+          submitBtn.innerHTML = '<span class="material-icons-outlined mr-2">check_circle</span>Success!';
+          submitBtn.style.backgroundColor = "#5ef78c";
+          successLabel.innerText = json.message;
+          
+          // Clear form
+          document.getElementById("old-password").value = "";
+          document.getElementById("new-password").value = "";
+          
+          setTimeout(() => {
+            location.reload();
+          }, 1500);
+        } else {
+          // Show error state
+          submitBtn.innerHTML = '<span class="material-icons-outlined mr-2">error</span>Failed';
+          submitBtn.style.backgroundColor = "#f77b5e";
+          errorLabel.innerText = json.message;
+          
+          // Reset button after delay
+          setTimeout(() => {
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.style.backgroundColor = "";
+            submitBtn.disabled = false;
+            submitBtn.classList.remove("opacity-75", "cursor-not-allowed");
+          }, 2000);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        // Show network error state
+        submitBtn.innerHTML = '<span class="material-icons-outlined mr-2">wifi_off</span>Network Error';
         submitBtn.style.backgroundColor = "#f77b5e";
-        errorLabel.innerText = json.message;
+        errorLabel.innerText = "Network error. Please try again.";
         
         // Reset button after delay
         setTimeout(() => {
@@ -932,20 +967,6 @@ document
           submitBtn.classList.remove("opacity-75", "cursor-not-allowed");
         }, 2000);
       }
-    } catch (err) {
-      console.error("Fetch error:", err);
-      // Show network error state
-      submitBtn.innerHTML = '<span class="material-icons-outlined mr-2">wifi_off</span>Network Error';
-      submitBtn.style.backgroundColor = "#f77b5e";
-      errorLabel.innerText = "Network error. Please try again.";
-      
-      // Reset button after delay
-      setTimeout(() => {
-        submitBtn.innerHTML = originalBtnText;
-        submitBtn.style.backgroundColor = "";
-        submitBtn.disabled = false;
-        submitBtn.classList.remove("opacity-75", "cursor-not-allowed");
-      }, 2000);
     }
   });
 
