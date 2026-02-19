@@ -5,6 +5,10 @@
     "express": "^5.2.1",
     "mariadb": "^3.4.5",
     "multer": "^2.0.2",
-    "npm": "^11.7.0"
+    "npm": "^11.7.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
   }
 }
