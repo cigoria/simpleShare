@@ -1,5 +1,15 @@
 {
+  "name": "simpleshare",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "cd src/frontend && vite",
+    "build": "cd src/frontend && vite build",
+    "preview": "cd src/frontend && vite preview",
+    "start": "node src/server.js"
+  },
   "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
@@ -11,5 +21,10 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6"
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "vite": "^5.0.0"
   }
 }

@@ -1,0 +1,287 @@
+<template>
+  <div 
+    v-if="visible"
+    class="flex justify-center items-center w-full h-full absolute top-0 left-0 bg-transparent background"
+    @click="$emit('close')">
+    <div
+      class="z-10 bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] mobile:h-[calc(100vh-10vh)] w-[calc(100vw-30vw)] mobile:w-[calc(100vw-5vw)] flex items-center justify-center flex-col m-[100px_auto] mobile:m-[50px_auto] mobile:mx-4 rounded-[28px] mobile:rounded-[20px] border-3 border-[#a1a1a1] transition-all duration-300 modal animate-scale-in"
+      @click.stop>
+      <button
+        class="absolute top-5 mobile:top-3 h-[42px] mobile:h-[36px] right-5 mobile:right-3 bg-primary-button text-black border-none px-[10px] mobile:px-[8px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] text-center z-10 close-btn transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-primary-button/50"
+        @click="$emit('close')">
+        <span class="material-icons-outlined mobile:text-sm">close</span>
+      </button>
+      
+      <!-- Drop Zone -->
+      <div
+        v-if="!uploading && !uploadComplete"
+        class="font-inter text-2xl mobile:text-xl relative h-[80%] mobile:h-[70%] w-[80%] mobile:w-[90%] flex items-center justify-center m-[100px_auto] mobile:m-[50px_auto] rounded-[28px] mobile:rounded-[20px] border-0 transition-all duration-300 drop_zone cursor-pointer hover:scale-105"
+        :class="{ 'dragover': isDragOver }"
+        @click="triggerFileInput"
+        @dragover.prevent="handleDragOver"
+        @dragleave.prevent="handleDragLeave"
+        @drop.prevent="handleDrop">
+        <p class="text-center mobile:text-sm">
+          <span style="color: #5ef78c">Drop</span> or
+          <span style="color: #4c73f0">Select</span> files here
+        </p>
+      </div>
+
+      <!-- Upload Progress -->
+      <div 
+        v-if="uploading"
+        class="w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-8 mobile:p-4 flex flex-col items-center justify-center space-y-6 mobile:space-y-4">
+        <div class="w-full">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm mobile:text-xs text-gray-300">Upload Progress</span>
+            <span class="text-sm mobile:text-xs font-medium text-primary-button">{{ uploadProgress.percentage }}%</span>
+          </div>
+          <div class="w-full bg-gray-700 rounded-full h-3 mobile:h-2 overflow-hidden">
+            <div 
+              class="h-full bg-gradient-to-r from-primary-button to-secondary-button rounded-full transition-all duration-300 ease-out" 
+              :style="{ width: uploadProgress.percentage + '%' }">
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex flex-col items-center space-y-2 text-center">
+          <div class="text-lg mobile:text-base text-white">
+            <span class="font-red-hat">{{ uploadProgress.speed }} MB/s</span>
+          </div>
+          <div class="text-sm mobile:text-xs text-gray-400">
+            <span>{{ uploadProgress.loaded }}</span> / <span>{{ uploadProgress.total }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Status/Error -->
+      <div 
+        v-if="uploadError"
+        class="w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-8 mobile:p-4 flex flex-col items-center justify-center">
+        <div class="text-center mb-8 mobile:mb-4">
+          <span class="material-icons-outlined text-4xl mobile:text-3xl mb-4 mobile:mb-2" style="color: #f77b5e">error</span>
+          <p class="text-xl mobile:text-lg font-inter" style="color: #f77b5e">
+            Upload failed!
+          </p>
+        </div>
+        <div class="space-y-6 mobile:space-y-4">
+          <div class="text-center p-6 mobile:p-4 bg-black/20 rounded-xl border border-[#444]">
+            <p class="text-sm mobile:text-xs text-gray-400 mb-2 font-inter">
+              Failed to upload:
+            </p>
+            <p class="text-sm mobile:text-xs font-inter" style="color: #f77b5e">{{ uploadError }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success Content -->
+      <div 
+        v-if="uploadComplete"
+        class="space-y-6 mobile:space-y-4">
+        <div class="text-center p-6 mobile:p-4 bg-black/20 rounded-xl border border-[#444]">
+          <p class="text-gray-400 text-3xl mobile:text-2xl font-inter">
+            Your file code:
+          </p>
+          <div class="flex items-center justify-center gap-3 mobile:gap-2">
+            <span 
+              class="text-3xl mobile:text-2xl font-red-hat font-bold text-primary-button cursor-pointer group relative transition-all duration-200 hover:scale-110 hover:text-secondary-button"
+              title="Click to copy"
+              @click="copyCode">
+              <span
+                class="tooltip absolute -top-8 mobile:-top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs mobile:text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                {{ copyTooltip }}
+              </span>
+              {{ uploadResult.code }}
+            </span>
+          </div>
+          <p class="text-sm mobile:text-xs text-gray-400 mb-3 font-inter mt-6 mobile:mt-4">
+            or share via direct link:
+          </p>
+          <div class="flex items-center gap-3 mobile:gap-2 p-4 mobile:p-3 bg-black/20 rounded-xl border border-[#444]">
+            <span 
+              class="flex-1 font-red-hat text-sm mobile:text-xs truncate cursor-pointer hover:text-primary-button transition-colors"
+              @click="copyLink">
+              {{ fullUrl }}
+            </span>
+            <button 
+              class="p-2 mobile:p-1 rounded-lg hover:bg-black/20 transition-all duration-200 group relative hover:scale-110"
+              title="Click to copy"
+              @click="copyLink">
+              <span class="material-icons-outlined text-xl mobile:text-lg text-gray-400 group-hover:text-white cursor-pointer">content_copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input 
+      ref="fileInput"
+      type="file"
+      style="display: none"
+      @change="handleFileSelect">
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'UploadModal',
+  props: {
+    visible: Boolean,
+    token: String
+  },
+  data() {
+    return {
+      isDragOver: false,
+      uploading: false,
+      uploadComplete: false,
+      uploadError: null,
+      uploadResult: null,
+      uploadProgress: {
+        percentage: 0,
+        speed: '0',
+        loaded: '0 MB',
+        total: '0 MB'
+      },
+      copyTooltip: 'Click to copy'
+    }
+  },
+  computed: {
+    fullUrl() {
+      if (this.uploadResult && this.uploadResult.code) {
+        return window.location.href + "files/" + this.uploadResult.code
+      }
+      return ''
+    }
+  },
+  methods: {
+    triggerFileInput() {
+      this.$refs.fileInput.click()
+    },
+
+    handleFileSelect(event) {
+      const files = event.target.files
+      if (files.length > 0) {
+        this.handleFiles(files)
+      }
+    },
+
+    handleDragOver(event) {
+      this.isDragOver = true
+      event.target.style.transform = "scale(1.05)"
+      event.target.style.backgroundColor = "rgba(103, 146, 255, 0.1)"
+    },
+
+    handleDragLeave(event) {
+      this.isDragOver = false
+      event.target.style.transform = ""
+      event.target.style.backgroundColor = ""
+    },
+
+    handleDrop(event) {
+      this.isDragOver = false
+      event.target.style.transform = ""
+      event.target.style.backgroundColor = ""
+      const files = event.dataTransfer.files
+      this.handleFiles(files)
+    },
+
+    async handleFiles(files) {
+      if (files.length === 0) return
+
+      const file = files[0]
+      this.uploading = true
+      this.uploadError = null
+      this.uploadComplete = false
+
+      // Initialize progress display
+      this.uploadProgress.total = this.formatBytes(file.size)
+      this.uploadProgress.loaded = "0 MB"
+      this.uploadProgress.speed = "0"
+      this.uploadProgress.percentage = 0
+
+      try {
+        const result = await this.$emit('upload-file', file, this.token, (progress) => {
+          this.uploadProgress.percentage = progress.percentage
+          this.uploadProgress.loaded = this.formatBytes(progress.loaded)
+          this.uploadProgress.total = this.formatBytes(progress.total)
+          
+          // Calculate speed (simplified)
+          if (progress.percentage > 0) {
+            const timeElapsed = Date.now() - this.uploadStartTime
+            const speedBytesPerSecond = progress.loaded / (timeElapsed / 1000)
+            const speedMBPerSecond = speedBytesPerSecond / (1024 * 1024)
+            this.uploadProgress.speed = speedMBPerSecond.toFixed(2)
+          }
+        })
+
+        this.uploadResult = result
+        this.uploadComplete = true
+        this.$emit('upload-success')
+      } catch (error) {
+        this.uploadError = error.error || 'Upload failed'
+      } finally {
+        this.uploading = false
+      }
+    },
+
+    formatBytes(bytes) {
+      if (bytes === 0) return "0 B"
+      const units = ["B", "kB", "MB", "GB", "TB"]
+      const threshold = 1024
+      let unitIndex = 0
+      let size = bytes
+
+      while (size >= threshold && unitIndex < units.length - 1) {
+        size /= threshold
+        unitIndex++
+      }
+
+      return `${size.toFixed(1)} ${units[unitIndex]}`
+    },
+
+    async copyCode() {
+      try {
+        await navigator.clipboard.writeText(this.uploadResult.code)
+        this.showCopyFeedback('Code copied!')
+      } catch (err) {
+        console.error("Failed to copy:", err)
+      }
+    },
+
+    async copyLink() {
+      try {
+        await navigator.clipboard.writeText(this.fullUrl)
+        this.showCopyFeedback('Link copied!')
+      } catch (err) {
+        console.error("Failed to copy:", err)
+      }
+    },
+
+    showCopyFeedback(message) {
+      this.copyTooltip = message
+      setTimeout(() => {
+        this.copyTooltip = 'Click to copy'
+      }, 2000)
+    }
+  },
+  watch: {
+    visible(newVal) {
+      if (!newVal) {
+        // Reset state when modal is closed
+        this.uploading = false
+        this.uploadComplete = false
+        this.uploadError = null
+        this.uploadResult = null
+        this.uploadProgress = {
+          percentage: 0,
+          speed: '0',
+          loaded: '0 MB',
+          total: '0 MB'
+        }
+      } else {
+        this.uploadStartTime = Date.now()
+      }
+    }
+  }
+}
+</script>

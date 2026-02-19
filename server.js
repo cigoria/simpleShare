@@ -19,6 +19,14 @@ const pool = mariadb.createPool({
 });
 const app = express();
 
+// Allowed tables for admin endpoints to prevent SQL injection
+const allowedTables = new Set([
+  "users",
+  "file_index", 
+  "session_tokens",
+  "settings",
+]);
+
 // Set proper encoding headers for HTML routes
 app.use((req, res, next) => {
   if (req.path.endsWith('.js')) {
@@ -783,14 +791,19 @@ app.get("/admin/getTableData", async (req, res) => {
         return res.status(400).json({ error: "Table name is required" });
       }
 
+      // Validate table name against whitelist to prevent SQL injection
+      if (!allowedTables.has(tableName)) {
+        return res.status(400).json({ error: "Invalid table name" });
+      }
+
       conn = await pool.getConnection();
 
       // Get column information
-      const columns = await conn.execute(`DESCRIBE ${tableName}`);
+      const columns = await conn.execute(`DESCRIBE \`${tableName}\``);
       const columnNames = columns.map((col) => col.Field);
 
       // Get table data
-      const rows = await conn.execute(`SELECT * FROM ${tableName} LIMIT 100`);
+      const rows = await conn.execute(`SELECT * FROM \`${tableName}\` LIMIT 100`);
 
       // Convert rows to array format and handle BigInt
       const data = rows.map((row) => {
@@ -833,8 +846,13 @@ app.get("/admin/getTableSchema", async (req, res) => {
         return res.status(400).json({ error: "Table name is required" });
       }
 
+      // Validate table name against whitelist to prevent SQL injection
+      if (!allowedTables.has(tableName)) {
+        return res.status(400).json({ error: "Invalid table name" });
+      }
+
       conn = await pool.getConnection();
-      const columns = await conn.execute(`DESCRIBE ${tableName}`);
+      const columns = await conn.execute(`DESCRIBE \`${tableName}\``);
 
       const schema = columns.map((col) => ({
         name: col.Field,
@@ -1818,9 +1836,9 @@ function getIPv4Addresses() {
   const interfaces = os.networkInterfaces();
   const addresses = [];
   for (const name of Object.keys(interfaces)) {
-    for (const interface of interfaces[name]) {
-      if (interface.family === "IPv4" && !interface.internal) {
-        addresses.push(interface.address);
+    for (const iface of interfaces[name]) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        addresses.push(iface.address);
       }
     }
   }

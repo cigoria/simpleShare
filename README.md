@@ -4,10 +4,21 @@ SimpleShare is a web application that allows users to upload and share files eas
 
 ## Features
 
-- User-friendly interface
-- File upload functionality
+- User-friendly interface built with Vue.js 3
+- File upload functionality with progress tracking
+- User authentication and registration
 - Dashboard for managing uploaded files
-- Responsive design
+- Responsive design with Tailwind CSS
+- Admin panel for user management
+- File sharing via unique codes
+
+## Technology Stack
+
+- **Frontend**: Vue.js 3, Vue Router, Tailwind CSS
+- **Backend**: Node.js, Express.js
+- **Database**: MariaDB
+- **Build Tool**: Vite
+- **Authentication**: bcrypt
 
 ## Installation
 
@@ -24,17 +35,57 @@ SimpleShare is a web application that allows users to upload and share files eas
    npm install
    ```
 
-3. Copy .env
+3. Copy environment file:
 
    ```bash
    cp src/.env.example src/.env
    ```
 
-4. Start the server:
+4. Configure your database settings in `src/.env`
+
+5. Build the frontend:
 
    ```bash
-   node src/server.js
+   npm run build
    ```
+
+6. Start the server:
+
+   ```bash
+   npm start
+   ```
+
+## Development
+
+For development with hot reload:
+
+1. Start the backend server:
+   ```bash
+   npm start
+   ```
+
+2. In another terminal, start the frontend dev server:
+   ```bash
+   npm run dev
+   ```
+
+The frontend will be available at `http://localhost:5173` and the backend API at `http://localhost:3000`.
+
+## Folder Structure
+
+```
+└── 📁public
+   ├── favicon.ico
+└── 📁src
+   └── 📁assets
+   └── 📁components
+      └── 📁admin
+   └── 📁composables
+   └── 📁router
+   └── 📁views
+      └── 📁admin
+└── 📁uploads
+```
 
 ## Contributing
 
