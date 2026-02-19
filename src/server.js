@@ -1836,9 +1836,9 @@ function getIPv4Addresses() {
   const interfaces = os.networkInterfaces();
   const addresses = [];
   for (const name of Object.keys(interfaces)) {
-    for (const interface of interfaces[name]) {
-      if (interface.family === "IPv4" && !interface.internal) {
-        addresses.push(interface.address);
+    for (const iface of interfaces[name]) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        addresses.push(iface.address);
       }
     }
   }
