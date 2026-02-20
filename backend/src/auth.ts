@@ -94,6 +94,7 @@ export async function loginUser(username:string,password:string,user_agent:strin
     try{
         conn = await pool.getConnection();
         const user_result = await conn.query("SELECT * FROM users WHERE username = ?",[username])
+        console.log(user_result)
         if (user_result.length === 0){return {token:null,success:false,message:"User does not exist!"}}
         const isMatch = await bcrypt.compare(password, user_result[0].password_hash);
         if (isMatch){
@@ -104,7 +105,7 @@ export async function loginUser(username:string,password:string,user_agent:strin
             return {token:null,success:false,message:"Invalid credentials!"}
         }
     }
-    catch{
+    catch(err){
         return {token:null,success:false,message:"Server error!"}
     }
     finally{

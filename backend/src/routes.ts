@@ -32,7 +32,6 @@ router.post("/login",async (req:Request,res:Response)=>{
   }
 
   let login_result = await auth.loginUser(username=username,password=password,req.headers['user-agent'] || null)
-  console.log(login_result)
   if (login_result.success){
     return res.status(200).json({ status: 200, error: login_result.message, token: login_result.token });
   }

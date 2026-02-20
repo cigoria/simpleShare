@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "cd client && vite",
-    "start": "cd backend && ts-node src/server.ts",
+    "start": "node dist/server.js",
     "build": "cd client && vite build && cd ../backend && tsc",
+    "build_back":"cd backend && tsc",
+    "build_front":"cd client && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
