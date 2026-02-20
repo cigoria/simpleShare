@@ -9,9 +9,9 @@ const PORT = process.env.PORT || 3000;
 const app = express()
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
-
-
 app.use("/",router)
+
+
 
 function getIPv4Addresses() {
   const interfaces = os.networkInterfaces();

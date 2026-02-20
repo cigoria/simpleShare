@@ -35,14 +35,13 @@ export async function validateUserToken(token:string, validateTo:PermissionLevel
         conn = await pool.getConnection();
         // Query tokens table
         const token_result = await conn.query("SELECT * FROM session_tokens WHERE token = ?",[token])
-
         // Checks before querying for user data
         if (token_result.length === 0){
             return {user_id: null,level:"none",met:false}
         }
         let user_id:string = token_result[0]["user_id"];
-
-        if (token_result[0]["is_valid"] === false) {
+        
+        if (token_result[0]["is_valid"] === 0) {
             return {user_id: user_id,level:"none",met:false}
         }
         
@@ -52,21 +51,20 @@ export async function validateUserToken(token:string, validateTo:PermissionLevel
         if (user_result.length === 0){
             return {user_id: null,level:"none",met:false}
         }
-
-        let permission:PermissionLevel = "none"
-        switch(user_result[0].is_admin){
-            case(true):{permission = "admin"};
-            case(false):{permission = "user";}
-        }
+        
+        const permission: PermissionLevel = user_result[0].is_admin ? "admin" : "user";
         
         if (validateTo === null) {
             return {user_id:user_id, level:permission,met:false}
         } else {
             return {user_id:user_id, level:permission,met:validateTo===permission}
         }
+    }catch(err) {
+        console.error(err);
+        return { user_id: null, level: "none", met: false };
     } finally{
         if (conn) {conn.release()}
-    }
+    }   
 }
 
 export async function generateSession(user_id:string,user_agent:string | null): Promise<string | null>{
@@ -94,7 +92,6 @@ export async function loginUser(username:string,password:string,user_agent:strin
     try{
         conn = await pool.getConnection();
         const user_result = await conn.query("SELECT * FROM users WHERE username = ?",[username])
-        console.log(user_result)
         if (user_result.length === 0){return {token:null,success:false,message:"User does not exist!"}}
         const isMatch = await bcrypt.compare(password, user_result[0].password_hash);
         if (isMatch){
@@ -114,7 +111,7 @@ export async function loginUser(username:string,password:string,user_agent:strin
 
 }
 
-export async function logoutUser(token:string){
+export async function logoutUser(token:string): Promise<boolean>{
     let conn;
     try {
         conn = await pool.getConnection();
