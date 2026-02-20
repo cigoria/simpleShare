@@ -2,8 +2,9 @@
   "name": "simpleshare",
   "version": "1.0.0",
   "scripts": {
+    "dev": "cd client && vite",
+    "start": "cd backend && ts-node src/server.ts",
     "build": "cd client && vite build && cd ../backend && tsc",
-    "start": "node dist/server.js",
     "preview": "vite preview"
   },
   "dependencies": {
