@@ -15,20 +15,20 @@ const pool = mariadb.createPool({
   charset: "utf8mb4",
 });
 
-type PermissionLevel = "admin" | "user" | "none"
-interface PermissionResponse {
+export type PermissionLevel = "admin" | "user" | "none"
+export interface PermissionResponse {
     user_id: string | null;
     level: PermissionLevel;
     met: boolean;
 }
-interface LoginResponse {
+export interface LoginResponse {
     token: string | null;
     success: boolean;
     message: string;
 }
 
 
-async function validateUserToken(token:string, validateTo:PermissionLevel | null): Promise<PermissionResponse> {
+export async function validateUserToken(token:string, validateTo:PermissionLevel | null): Promise<PermissionResponse> {
     let conn;
     try {
 
@@ -69,7 +69,7 @@ async function validateUserToken(token:string, validateTo:PermissionLevel | null
     }
 }
 
-async function generateSession(user_id:string,user_agent:string | null): Promise<string | null>{
+export async function generateSession(user_id:string,user_agent:string | null): Promise<string | null>{
     let conn;
     try {
         const chars:string =
@@ -80,7 +80,7 @@ async function generateSession(user_id:string,user_agent:string | null): Promise
         conn = await pool.getConnection();
         let agent_text:string = ""
         if (user_agent !== null){agent_text=user_agent} 
-        await conn.query("INSERT INTO session_tokens (token, user_id,user-agent) value (?, ?, ?)",[token, user_id,agent_text]);
+        let result = await conn.query("INSERT INTO session_tokens (token, user_id, user_agent) value (?, ?, ?)",[token, user_id, agent_text]);
         return token;
     } catch{
         return null;
@@ -89,7 +89,7 @@ async function generateSession(user_id:string,user_agent:string | null): Promise
 }
 
 
-async function loginUser(username:string,password:string,user_agent:string | null): Promise<LoginResponse> {
+export async function loginUser(username:string,password:string,user_agent:string | null): Promise<LoginResponse> {
     let conn;
     try{
         conn = await pool.getConnection();
@@ -104,12 +104,16 @@ async function loginUser(username:string,password:string,user_agent:string | nul
             return {token:null,success:false,message:"Invalid credentials!"}
         }
     }
+    catch{
+        return {token:null,success:false,message:"Server error!"}
+    }
     finally{
         if (conn){ conn.release();}
     }
+
 }
 
-async function logoutUser(token:string){
+export async function logoutUser(token:string){
     let conn;
     try {
         conn = await pool.getConnection();
@@ -120,7 +124,7 @@ async function logoutUser(token:string){
     }finally{if (conn){conn.release()}}
 }
 
-async function checkUser(username:string) {
+export async function checkUser(username:string) {
     let conn;
     try {
         conn = await pool.getConnection();
@@ -129,7 +133,7 @@ async function checkUser(username:string) {
     } finally {if (conn){conn.release()}}
 }
 
-async function registerUser(username:string,password:string,is_admin:boolean = false,quota:number=52428800){
+export async function registerUser(username:string,password:string,is_admin:boolean = false,quota:number=52428800){
     let conn;
     try {
         conn = await pool.getConnection();
