@@ -1,11 +1,15 @@
-const express = require("express")
-import router from "./routes.ts";
-const os = require("os");
+import express from "express";
+import router from "./routes";
+const os = require("os")
+import path from "path"
 require("dotenv").config();
 
 
 const PORT = process.env.PORT || 3000;
 const app = express()
+app.use(express.static(path.join(__dirname, 'public')));
+
+
 
 app.use("/",router)
 

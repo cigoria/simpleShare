@@ -2,10 +2,9 @@
   "name": "simpleshare",
   "version": "1.0.0",
   "scripts": {
-    "dev": "cd src && vite",
-    "build": "cd src && vite build",
-    "preview": "cd src && vite preview",
-    "start": "node server.js"
+    "build": "cd client && vite build && cd ../backend && tsc",
+    "start": "node dist/server.js",
+    "preview": "vite preview"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -16,12 +15,12 @@
     "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "vue": "^3.4.0",
+    "vue": "^3.5.28",
     "vue-router": "^4.2.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@vitejs/plugin-vue": "^5.0.0",
+    "@vitejs/plugin-vue": "^5.2.4",
     "vite": "^5.0.0"
   }
 }
