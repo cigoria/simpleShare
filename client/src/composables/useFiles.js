@@ -74,28 +74,52 @@ export function useFiles() {
       })
 
       const result = await response.json()
-      files.value = result.map(file_data => {
-        let decodedName = file_data.original_name
-        try {
-          decodedName = decodeURIComponent(escape(file_data.original_name))
-        } catch (e) {
-          decodedName = file_data.original_name
-        }
+      files.value = result.map(item => {
+        if (item.type === "group") {
+          // Handle group items
+          return {
+            code: item.code,
+            name: item.name,
+            date: new Date(item.create_date),
+            size: item.files.reduce((total, file) => total + file.size, 0),
+            formattedSize: formatBytes(item.files.reduce((total, file) => total + file.size, 0)),
+            formattedDate: new Date(item.create_date).toLocaleDateString("hu-HU", {
+              year: "2-digit",
+              month: "2-digit",
+              day: "2-digit",
+            }) + " " + new Date(item.create_date).toLocaleTimeString("hu-HU", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            type: "group",
+            files: item.files,
+            fileCount: item.files.length
+          }
+        } else {
+          // Handle individual files
+          let decodedName = item.original_name
+          try {
+            decodedName = decodeURIComponent(escape(item.original_name))
+          } catch (e) {
+            decodedName = item.original_name
+          }
 
-        return {
-          code: file_data.code,
-          name: decodedName,
-          date: new Date(file_data.upload_date),
-          size: file_data.size,
-          formattedSize: formatBytes(file_data.size),
-          formattedDate: new Date(file_data.upload_date).toLocaleDateString("hu-HU", {
-            year: "2-digit",
-            month: "2-digit",
-            day: "2-digit",
-          }) + " " + new Date(file_data.upload_date).toLocaleTimeString("hu-HU", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+          return {
+            code: item.code,
+            name: decodedName,
+            date: new Date(item.upload_date),
+            size: item.size,
+            formattedSize: formatBytes(item.size),
+            formattedDate: new Date(item.upload_date).toLocaleDateString("hu-HU", {
+              year: "2-digit",
+              month: "2-digit",
+              day: "2-digit",
+            }) + " " + new Date(item.upload_date).toLocaleTimeString("hu-HU", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            type: "file"
+          }
         }
       })
     } catch (error) {
