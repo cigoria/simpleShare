@@ -2,11 +2,7 @@
   <div id="header"
     class="absolute top-0 left-0 w-full h-[100px] mobile:h-[80px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400 animate-slide-down">
     <!-- Top header bar -->
-    <h1 id="logo"
-      class="absolute p-0 m-[10px] mobile:m-[5px] top-5 mobile:top-3 left-5 mobile:left-3 font-inter font-normal text-white text-3xl mobile:text-2xl animate-fade-in">
-      simple<span id="highlighted"
-        class="bg-gradient-to-r from-primary-button to-secondary-button bg-clip-text text-transparent">Share</span>
-    </h1>
+    <Logo />
     <div
       class="absolute top-5 mobile:top-3 right-5 mobile:right-3 flex justify-end items-end flex-row-reverse gap-2 mobile:gap-1">
       <button
@@ -50,8 +46,13 @@
 </template>
 
 <script>
+import Logo from './Logo.vue'
+
 export default {
   name: 'Header',
+  components: {
+    Logo
+  },
   props: {
     isAuthenticated: Boolean,
     quotaInfo: Object

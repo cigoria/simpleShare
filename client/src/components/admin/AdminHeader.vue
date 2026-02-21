@@ -4,9 +4,8 @@
     <!-- Top header bar -->
     <router-link 
       to="/"
-      class="absolute p-0 m-[10px] mobile:m-[5px] top-5 mobile:top-3 left-5 mobile:left-3 font-inter font-normal text-white text-3xl mobile:text-2xl animate-fade-in no-underline">
-      simple<span
-        class="bg-gradient-to-r from-primary-button to-secondary-button bg-clip-text text-transparent">Share</span>
+      class="no-underline">
+      <Logo />
     </router-link>
     <div
       class="button-container absolute top-5 mobile:top-3 right-5 mobile:right-3 flex gap-2 mobile:gap-1 flex-wrap mobile:flex-col mobile:items-end">
@@ -32,8 +31,13 @@
 </template>
 
 <script>
+import Logo from '../Logo.vue'
+
 export default {
   name: 'AdminHeader',
+  components: {
+    Logo
+  },
   props: {
     activeTab: String
   },
