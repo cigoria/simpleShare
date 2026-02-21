@@ -15,17 +15,17 @@
       <button
         v-if="accessLevel === 'admin'"
         class="h-[42px] mobile:h-[38px] w-[200px] mobile:w-[180px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] transition-all duration-200 hover:scale-105 hover:shadow-lg burber-item text-sm mobile:text-xs"
-        @click="$emit('show-register')">
+        @click="$emit('show-register'); $emit('close')">
         <span class="material-icons-outlined mobile:text-sm">person_add</span> Register user
       </button>
       <button
         class="h-[42px] mobile:h-[38px] w-[200px] mobile:w-[180px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] transition-all duration-200 hover:scale-105 hover:shadow-lg burber-item text-sm mobile:text-xs"
-        @click="$emit('show-my-files')">
+        @click="$emit('show-my-files'); $emit('close')">
         <span class="material-icons-outlined mobile:text-sm">folder</span> My files
       </button>
       <button
         class="h-[42px] mobile:h-[38px] w-[200px] mobile:w-[180px] bg-[rgba(55,55,55,0.66)] rounded-lg border border-[#a1a1a1] text-left justify-center items-center vertical-middle flex m-[2px] flex-row font-inter text-white hover:bg-[rgba(80,80,80,0.7)] transition-all duration-200 hover:scale-105 hover:shadow-lg burber-item text-sm mobile:text-xs"
-        @click="$emit('show-change-password')">
+        @click="$emit('show-change-password'); $emit('close')">
         <span class="material-icons-outlined mobile:text-sm">password</span> Change password
       </button>
       <hr v-if="accessLevel" class="border-gray-600 my-2" />
@@ -49,6 +49,7 @@ export default {
   emits: ['close', 'show-register', 'show-my-files', 'show-change-password', 'logout'],
   methods: {
     redirectToDashboard() {
+      this.$emit('close')
       const token = localStorage.getItem("token")
       if (!token) {
         console.error("No token found in localStorage")
