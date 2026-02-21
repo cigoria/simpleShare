@@ -23,7 +23,7 @@
         @click="$emit('show-upload')">
         <span class="material-icons-outlined mobile:text-sm">upload</span>
       </button>
-      <div v-if="isAuthenticated && quotaInfo.text" id="quota-container" class="hidden mobile:hidden">
+      <div v-if="isAuthenticated && quotaInfo.text" id="quota-container" class="block mobile:block">
         <div class="flex flex-col items-center gap-2">
           <span id="quota-text" class="text-sm whitespace-nowrap mobile:text-xs">{{ quotaInfo.text }}</span>
           <div class="flex items-center gap-2">
@@ -60,7 +60,9 @@ export default {
   emits: ['show-login', 'show-upload', 'toggle-hamburger'],
   methods: {
     getProgressBarColor(percentage) {
-      if (percentage > 100) {
+      if (this.quotaInfo.text === "? MB of ? MB") {
+        return "linear-gradient(to right, #8b5cf6, #8b5cf6)" // Purple color for unknown quota
+      } else if (percentage > 100) {
         return "linear-gradient(to right, #f77b5e, #f7e15e)"
       } else if (percentage > 90) {
         return "linear-gradient(to right, #f7e15e, #f7e15e)"

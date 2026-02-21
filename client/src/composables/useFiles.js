@@ -36,6 +36,10 @@ export function useFiles() {
         body: JSON.stringify({ token }),
       })
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
       
       if (data.total !== 0) {
@@ -49,7 +53,15 @@ export function useFiles() {
       quotaInfo.value.used = data.used
       quotaInfo.value.total = data.total
     } catch (error) {
-      console.error("Failed to fetch quota:", error)
+      // Fallback display when quota endpoint fails or doesn't exist
+      quotaInfo.value.text = "? MB of ? MB"
+      quotaInfo.value.percentage = 100
+      quotaInfo.value.used = 0
+      quotaInfo.value.total = 0
+      // Only log error if it's not a 404 (expected when quota endpoint doesn't exist)
+      if (!error.message.includes('404')) {
+        console.error("Failed to fetch quota:", error)
+      }
     }
   }
 
