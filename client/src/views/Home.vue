@@ -141,6 +141,7 @@ export default {
     const handleLogout = async () => {
       await logout()
       showHamburgerMenu.value = false
+      showNotification('Sikeres kijelentkezés!', 'ok')
     }
 
     const handleFileUpload = async (file, token, onProgress) => {
