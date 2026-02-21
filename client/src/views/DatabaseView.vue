@@ -180,7 +180,7 @@
 
 <script>
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { useAdmin } from '../../composables/useAdmin.js'
+import { useAdmin } from '../composables/useAdmin.js'
 
 export default {
   name: 'DatabaseView',

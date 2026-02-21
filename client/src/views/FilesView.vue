@@ -115,7 +115,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { useAdmin } from '../../composables/useAdmin.js'
+import { useAdmin } from '../composables/useAdmin.js'
 
 export default {
   name: 'FilesView',

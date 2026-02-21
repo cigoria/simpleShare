@@ -33,11 +33,11 @@
 import { ref, onMounted } from 'vue'
 import { useAuth } from '../composables/useAuth.js'
 import { useAdmin } from '../composables/useAdmin.js'
-import AdminHeader from '../components/admin/AdminHeader.vue'
-import UsersView from './admin/UsersView.vue'
-import FilesView from './admin/FilesView.vue'
-import GlobalStorageView from './admin/GlobalStorageView.vue'
-import DatabaseView from './admin/DatabaseView.vue'
+import AdminHeader from '../components/AdminHeader.vue'
+import UsersView from './UsersView.vue'
+import FilesView from './FilesView.vue'
+import GlobalStorageView from './GlobalStorageView.vue'
+import DatabaseView from './DatabaseView.vue'
 
 export default {
   name: 'AdminDashboard',
