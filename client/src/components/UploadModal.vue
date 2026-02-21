@@ -198,7 +198,7 @@ export default {
       uploadResult: null,
       showGroupChoiceModal: false,
       pendingFiles: null,
-      uploadType: 'individual', // 'individual' or 'group'
+      uploadType: null, // 'individual', 'group', or null
       groupName: '',
       uploadProgress: {
         percentage: 0,
@@ -256,17 +256,24 @@ export default {
     },
 
     async handleFiles(files) {
+      console.log('handleFiles called with:', files.length, 'files')
+      console.log('uploadType:', this.uploadType)
+      console.log('showGroupChoiceModal:', this.showGroupChoiceModal)
+      
       if (files.length === 0) return
 
       // If multiple files selected and no upload choice made, show group choice modal
       if (files.length > 1 && !this.uploadType) {
+        console.log('Should show GroupChoiceModal')
         this.pendingFiles = files
         this.showGroupChoiceModal = true
+        console.log('showGroupChoiceModal set to:', this.showGroupChoiceModal)
         return
       }
 
       // Determine upload type and proceed
       const isGroupUpload = this.uploadType === 'group' && files.length > 0
+      console.log('Proceeding with upload, isGroupUpload:', isGroupUpload)
       this.uploading = true
       this.uploadError = null
       this.uploadComplete = false
@@ -284,18 +291,21 @@ export default {
       this.uploadProgress.percentage = 0
 
       try {
-        const result = await this.$emit('upload-file', files, this.token, isGroupUpload, this.groupName, (progress) => {
-          this.uploadProgress.percentage = progress.percentage
-          this.uploadProgress.loaded = this.formatBytes(progress.loaded)
-          this.uploadProgress.total = this.formatBytes(progress.total)
-          
-          // Calculate speed (simplified)
-          if (progress.percentage > 0) {
-            const timeElapsed = Date.now() - this.uploadStartTime
-            const speedBytesPerSecond = progress.loaded / (timeElapsed / 1000)
-            const speedMBPerSecond = speedBytesPerSecond / (1024 * 1024)
-            this.uploadProgress.speed = speedMBPerSecond.toFixed(2)
-          }
+        // Call parent component's upload handler and wait for result
+        const result = await new Promise((resolve, reject) => {
+          this.$emit('upload-file', files, this.token, isGroupUpload, this.groupName, (progress) => {
+            this.uploadProgress.percentage = progress.percentage
+            this.uploadProgress.loaded = this.formatBytes(progress.loaded)
+            this.uploadProgress.total = this.formatBytes(progress.total)
+            
+            // Calculate speed (simplified)
+            if (progress.percentage > 0) {
+              const timeElapsed = Date.now() - this.uploadStartTime
+              const speedBytesPerSecond = progress.loaded / (timeElapsed / 1000)
+              const speedMBPerSecond = speedBytesPerSecond / (1024 * 1024)
+              this.uploadProgress.speed = speedMBPerSecond.toFixed(2)
+            }
+          }, resolve, reject)
         })
 
         this.uploadResult = result
@@ -402,7 +412,7 @@ export default {
         this.uploadResult = null
         this.showGroupChoiceModal = false
         this.pendingFiles = null
-        this.uploadType = 'individual'
+        this.uploadType = null // Reset to null to allow group choice
         this.groupName = ''
         this.uploadProgress = {
           percentage: 0,

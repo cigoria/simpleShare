@@ -114,4 +114,19 @@ router.post("/upload",auth.authenticateUser,userActions.prepareUploadContext,use
   } else {res.status(500).json({ error: "Database registration failed" });}
 })
 
+router.post("/upload-group", auth.authenticateUser, userActions.prepareGroupUploadContext, userActions.uploadGroupMiddleware, async (req: Request & Record<string, any>, res: Response) => {
+  if (!req.files || req.files.length === 0) {return res.status(400).json({error:"No files provided"})}
+  let result = await userActions.registerGroupUploadInIndex(req);
+  if (result) {
+    res.status(200).json({
+      error: null,
+      message: "Successfully uploaded files!",
+      group: result.group,
+      files: result.files
+    });
+  } else {
+    res.status(500).json({ error: "Database registration failed" });
+  }
+})
+
 export default router;

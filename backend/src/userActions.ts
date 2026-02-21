@@ -173,12 +173,26 @@ export async function registerUploadInIndex(req:Request& Record<string, any>) {
   try {
     conn = await pool.getConnection();
     if (!req.file) throw new Error("No file uploaded");
+    
+    // Rename the file to use the file code
+    const ext = path.extname(req.file.originalname);
+    const newFilename = `${req.fileCode}${ext}`;
+    
+    // Rename the file on disk
+    const fs = require('fs');
+    const oldPath = path.join(process.env.UPLOAD_PATH || './uploads', req.file.filename);
+    const newPath = path.join(process.env.UPLOAD_PATH || './uploads', newFilename);
+    
+    if (fs.existsSync(oldPath)) {
+      fs.renameSync(oldPath, newPath);
+    }
+    
     let res = await conn.query(
       "INSERT INTO file_index(id, mime_type, stored_filename, original_name, file_size_in_bytes, user_id) VALUES (?,?,?,?,?,?)",
       [
         req.fileCode,
         req.file.mimetype,
-        req.file.filename,
+        newFilename,
         req.file.originalname,
         req.file.size,
         req.user.id,
@@ -192,7 +206,8 @@ const storage = multer.diskStorage({
   destination: process.env.UPLOAD_PATH || "./uploads",
   filename: function (req:Request& Record<string, any>, file:Express.Multer.File, cb: (error: Error | null, filename: string)=>void){
     const ext = path.extname(file.originalname);
-    const filename = `${req.fileCode}${ext}`;
+    // For single file upload, use a temporary name first, will be renamed later
+    const filename = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 15)}${ext}`;
     cb(null, filename);
   },
 });
@@ -224,6 +239,134 @@ async function generateUniqueFileID(code_length:number) {
       if (res.length == 0) {return result}
     }
   } finally {if (conn) {conn.release();}}
+}
+
+export const uploadGroupMiddleware = (req:Request& Record<string, any>, res:Response, next:NextFunction) => {
+  const limits = {} as { [key: string]: any };
+  if (req.maxUploadSize) {limits.fileSize = req.maxUploadSize;}
+
+  const upload = multer({
+    storage: storage,
+    limits: limits,
+  }).array("files");
+
+  upload(req, res, (err:Error) => {
+    if (err) return next(err);
+    next();
+  });
+};
+
+async function generateUniqueGroupID(code_length:number) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const chars:string = "abcdefghijklmnopqrstuvwxyz";
+    while (true) {
+      let result:string = "";
+      for (let i = 0; i < code_length; i++) {result += chars.charAt(Math.floor(Math.random() * chars.length));}
+      let res = await conn.query("SELECT * FROM file_groups WHERE id = ?", [result]);
+      if (res.length == 0) {return result}
+    }
+  } finally {if (conn) {conn.release();}}
+}
+
+export async function prepareGroupUploadContext(req:Request& Record<string, any>, res:Response, next:NextFunction) {
+  const groupCode = await generateUniqueGroupID(6);
+  req.groupCode = groupCode;
+
+  // Check global storage limit first
+  const globalRemaining = await calculateRemainingGlobalStorage();
+  if (globalRemaining !== null && globalRemaining <= 0) {return res.status(500).json({ error: "Global storage limit reached" });}
+
+  // Check user quota
+  let remaining = await calculateRemainFromQuota(req.user.id)
+  
+  if (remaining !== null) {
+    if (remaining < BigInt(0)) {return res.sendStatus(413);}
+    req.maxUploadSize = remaining;
+  } 
+  else if (globalRemaining !== null && remaining === null) {
+    if (globalRemaining <= 0) {res.sendStatus(500);} 
+    else {req.maxUploadSize = globalRemaining;}
+  }
+
+  // Apply global storage limit to max upload size if it's more restrictive
+  if (globalRemaining !== null && remaining !== null && remaining > globalRemaining) {
+    if (globalRemaining <= 0) {res.sendStatus(500);} 
+    else {req.maxUploadSize = globalRemaining;}
+  }
+
+  next();
+}
+
+export async function registerGroupUploadInIndex(req:Request& Record<string, any>) {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    if (!req.files || req.files.length === 0) throw new Error("No files uploaded");
+    
+    const groupName = req.body.groupName || 'Untitled Group';
+    const fileIds: string[] = [];
+    const uploadedFiles: any[] = [];
+
+    // First, register all files in the file_index table
+    for (const file of req.files as Express.Multer.File[]) {
+      const fileCode = await generateUniqueFileID(6);
+      fileIds.push(fileCode);
+      
+      // Update the filename to include the file code
+      const ext = path.extname(file.originalname);
+      const newFilename = `${fileCode}${ext}`;
+      
+      // Rename the file on disk
+      const fs = require('fs');
+      const oldPath = path.join(process.env.UPLOAD_PATH || './uploads', file.filename);
+      const newPath = path.join(process.env.UPLOAD_PATH || './uploads', newFilename);
+      
+      if (fs.existsSync(oldPath)) {
+        fs.renameSync(oldPath, newPath);
+      }
+      
+      // Register file in database
+      await conn.query(
+        "INSERT INTO file_index(id, mime_type, stored_filename, original_name, file_size_in_bytes, user_id) VALUES (?,?,?,?,?,?)",
+        [
+          fileCode,
+          file.mimetype,
+          newFilename,
+          file.originalname,
+          file.size,
+          req.user.id,
+        ],
+      );
+
+      uploadedFiles.push({
+        code: fileCode,
+        originalname: file.originalname,
+        size: file.size
+      });
+    }
+
+    // Then create the group entry
+    await conn.query(
+      "INSERT INTO file_groups(id, name, file_ids, user_id, created_at) VALUES (?,?,?,?,?)",
+      [
+        req.groupCode,
+        groupName,
+        JSON.stringify(fileIds),
+        req.user.id,
+        new Date().toISOString(),
+      ],
+    );
+
+    return {
+      group: {
+        id: req.groupCode,
+        name: groupName
+      },
+      files: uploadedFiles
+    };
+  } finally {if (conn) conn.release();}
 }
 
 export async function prepareUploadContext(req:Request& Record<string, any>, res:Response, next:NextFunction) {

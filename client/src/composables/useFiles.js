@@ -187,16 +187,30 @@ export function useFiles() {
     return new Promise((resolve, reject) => {
       const formData = new FormData()
       
+      // Debug logging - check what files we received
+      console.log('Files received:', files)
+      console.log('Files type:', typeof files)
+      console.log('Files length:', files.length)
+      if (files.length > 0) {
+        console.log('First file:', files[0])
+        console.log('First file type:', files[0] instanceof File)
+        console.log('First file name:', files[0].name)
+        console.log('First file size:', files[0].size)
+      }
+      
       if (isGroupUpload && files.length > 0) {
         // Group upload
-        for (let file of files) {
-          formData.append("files", file)
+        console.log('Group upload - files to upload:', files.length)
+        for (let i = 0; i < files.length; i++) {
+          console.log(`Appending file ${i}:`, files[i])
+          formData.append("files", files[i])
         }
         formData.append("groupName", groupName)
         formData.append("createGroup", "true")
       } else {
         // Single file upload (backward compatibility)
-        const file = Array.isArray(files) ? files[0] : files
+        const file = files[0] // FileList is array-like, get first item
+        console.log('Appending file to formData:', file)
         formData.append("file", file)
       }
 
@@ -257,6 +271,16 @@ export function useFiles() {
       const endpoint = isGroupUpload ? '/upload-group' : '/upload'
       xhr.open('POST', endpoint)
       xhr.setRequestHeader('Authorization', token)
+      
+      // Debug logging
+      console.log('Upload request:', {
+        endpoint,
+        token: token ? 'present' : 'missing',
+        isGroupUpload,
+        filesCount: files.length,
+        formDataEntries: Array.from(formData.entries())
+      })
+      
       xhr.send(formData)
     })
   }

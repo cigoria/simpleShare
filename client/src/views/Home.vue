@@ -146,20 +146,25 @@ export default {
       showNotification('Logout successful!', 'ok')
     }
 
-    const handleFileUpload = async (files, token, isGroupUpload = false, groupName = '', onProgress) => {
-      const result = await upload(files, token, isGroupUpload, groupName, onProgress)
-      if (result.success) {
-        await updateQuotaDisplay(token)
-        await updateFilesDisplay(token)
-        showNotification('File uploaded successfully!', 'ok')
-      } else {
+    const handleFileUpload = async (files, token, isGroupUpload = false, groupName = '', onProgress, resolve, reject) => {
+      try {
+        const result = await upload(files, token, isGroupUpload, groupName, onProgress)
+        if (result.success) {
+          await updateQuotaDisplay(token)
+          await updateFilesDisplay(token)
+          showNotification('File uploaded successfully!', 'ok')
+        } else {
+          showNotification('Upload failed!', 'error')
+        }
+        resolve(result)
+      } catch (error) {
         showNotification('Upload failed!', 'error')
+        reject(error)
       }
-      return result
     }
 
     const handleUploadSuccess = () => {
-      showUploadModal.value = false
+      // Don't close modal automatically - let user see the code and copy it
       showNotification('Upload completed!', 'ok')
     }
 
