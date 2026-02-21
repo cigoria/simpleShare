@@ -18,13 +18,17 @@
     "express": "^5.2.1",
     "mariadb": "^3.4.5",
     "multer": "^2.0.2",
+    "tailwindcss": "^4.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vue": "^3.5.28",
     "vue-router": "^4.2.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/express": "^5.0.6",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.10.5",
     "@vitejs/plugin-vue": "^6.0.4",
     "concurrently": "^8.2.2",
     "nodemon": "^3.1.7",
