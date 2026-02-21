@@ -156,13 +156,25 @@ export function useFiles() {
     }
   }
 
-  const uploadFile = async (file, token, onProgress) => {
+  const uploadFile = async (files, token, isGroupUpload = false, groupName = '', onProgress) => {
     uploading.value = true
     uploadProgress.value = 0
 
     return new Promise((resolve, reject) => {
       const formData = new FormData()
-      formData.append("file", file)
+      
+      if (isGroupUpload && files.length > 0) {
+        // Group upload
+        for (let file of files) {
+          formData.append("files", file)
+        }
+        formData.append("groupName", groupName)
+        formData.append("createGroup", "true")
+      } else {
+        // Single file upload (backward compatibility)
+        const file = Array.isArray(files) ? files[0] : files
+        formData.append("file", file)
+      }
 
       const xhr = new XMLHttpRequest()
       
@@ -184,7 +196,19 @@ export function useFiles() {
         uploading.value = false
         if (xhr.status >= 200 && xhr.status < 300) {
           const response = JSON.parse(xhr.responseText)
-          resolve({ success: true, code: response.code })
+          
+          if (isGroupUpload) {
+            resolve({ 
+              success: true, 
+              group: response.group,
+              files: response.files 
+            })
+          } else {
+            resolve({ 
+              success: true, 
+              code: response.code 
+            })
+          }
         } else {
           let errorMessage = "Upload failed"
           if (xhr.status === 413) {
@@ -205,7 +229,9 @@ export function useFiles() {
         reject({ success: false, error: "Network error" })
       })
       
-      xhr.open('POST', '/upload')
+      // Use appropriate endpoint
+      const endpoint = isGroupUpload ? '/upload-group' : '/upload'
+      xhr.open('POST', endpoint)
       xhr.setRequestHeader('Authorization', token)
       xhr.send(formData)
     })

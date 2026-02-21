@@ -144,8 +144,8 @@ export default {
       showNotification('Sikeres kijelentkezés!', 'ok')
     }
 
-    const handleFileUpload = async (file, token, onProgress) => {
-      const result = await upload(file, token, onProgress)
+    const handleFileUpload = async (files, token, isGroupUpload = false, groupName = '', onProgress) => {
+      const result = await upload(files, token, isGroupUpload, groupName, onProgress)
       if (result.success) {
         await updateQuotaDisplay(token)
         await updateFilesDisplay(token)

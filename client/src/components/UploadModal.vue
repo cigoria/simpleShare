@@ -78,7 +78,10 @@
       <div 
         v-if="uploadComplete"
         class="space-y-6 mobile:space-y-4">
-        <div class="text-center p-6 mobile:p-4 bg-black/20 rounded-xl border border-[#444]">
+        <!-- Individual Success -->
+        <div 
+          v-if="uploadResult.code"
+          class="text-center p-6 mobile:p-4 bg-black/20 rounded-xl border border-[#444]">
           <p class="text-gray-400 text-3xl mobile:text-2xl font-inter">
             Your file code:
           </p>
@@ -111,21 +114,77 @@
             </button>
           </div>
         </div>
+        
+        <!-- Group Success -->
+        <div 
+          v-if="uploadResult.group"
+          class="text-center p-6 mobile:p-4 bg-black/20 rounded-xl border border-[#444]">
+          <p class="text-gray-400 text-3xl mobile:text-2xl font-inter mb-4">
+            Files uploaded successfully!
+          </p>
+          <div class="mb-6">
+            <p class="text-sm mobile:text-xs text-gray-400">
+              Group code: 
+              <span 
+                class="font-red-hat font-bold text-primary-button cursor-pointer hover:text-secondary-button transition-colors"
+                title="Click to copy"
+                @click="copyGroupCode">
+                {{ uploadResult.group.id }}
+              </span>
+            </p>
+          </div>
+          <div class="text-left max-h-40 overflow-y-auto mb-4 space-y-2">
+            <div 
+              v-for="file in uploadResult.files" 
+              :key="file.code"
+              class="text-sm mobile:text-xs text-gray-300 bg-black/10 p-2 rounded">
+              <span class="font-medium">{{ file.originalname }}</span>
+              <span class="text-gray-400 ml-2">({{ formatBytes(file.size) }})</span>
+              <span class="text-primary-button font-red-hat ml-2">{{ file.code }}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 mobile:gap-2 p-4 mobile:p-3 bg-black/20 rounded-xl border border-[#444]">
+            <span 
+              class="flex-1 font-red-hat text-sm mobile:text-xs truncate cursor-pointer hover:text-primary-button transition-colors"
+              @click="copyGroupLink">
+              {{ groupUrl }}
+            </span>
+            <button 
+              class="p-2 mobile:p-1 rounded-lg hover:bg-black/20 transition-all duration-200 group relative hover:scale-110"
+              title="Click to copy"
+              @click="copyGroupLink">
+              <span class="material-icons-outlined text-xl mobile:text-lg text-gray-400 group-hover:text-white cursor-pointer">content_copy</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
     <input 
       ref="fileInput"
       type="file"
+      multiple
       style="display: none"
       @click.stop
       @change.stop="handleFileSelect">
   </div>
+
+  <!-- Group Choice Modal -->
+  <GroupChoiceModal 
+    :visible="showGroupChoiceModal"
+    @close="showGroupChoiceModal = false"
+    @create-group="handleCreateGroup"
+    @upload-individually="handleUploadIndividually" />
 </template>
 
 <script>
+import GroupChoiceModal from './GroupChoiceModal.vue'
+
 export default {
   name: 'UploadModal',
+  components: {
+    GroupChoiceModal
+  },
   props: {
     visible: Boolean,
     token: String
@@ -137,6 +196,10 @@ export default {
       uploadComplete: false,
       uploadError: null,
       uploadResult: null,
+      showGroupChoiceModal: false,
+      pendingFiles: null,
+      uploadType: 'individual', // 'individual' or 'group'
+      groupName: '',
       uploadProgress: {
         percentage: 0,
         speed: '0',
@@ -150,6 +213,12 @@ export default {
     fullUrl() {
       if (this.uploadResult && this.uploadResult.code) {
         return window.location.href + "files/" + this.uploadResult.code
+      }
+      return ''
+    },
+    groupUrl() {
+      if (this.uploadResult && this.uploadResult.group && this.uploadResult.group.id) {
+        return window.location.href + "groups/" + this.uploadResult.group.id
       }
       return ''
     }
@@ -189,19 +258,33 @@ export default {
     async handleFiles(files) {
       if (files.length === 0) return
 
-      const file = files[0]
+      // If multiple files selected and no upload choice made, show group choice modal
+      if (files.length > 1 && !this.uploadType) {
+        this.pendingFiles = files
+        this.showGroupChoiceModal = true
+        return
+      }
+
+      // Determine upload type and proceed
+      const isGroupUpload = this.uploadType === 'group' && files.length > 0
       this.uploading = true
       this.uploadError = null
       this.uploadComplete = false
 
+      // Calculate total size for all files
+      let totalSize = 0
+      for (let file of files) {
+        totalSize += file.size
+      }
+
       // Initialize progress display
-      this.uploadProgress.total = this.formatBytes(file.size)
+      this.uploadProgress.total = this.formatBytes(totalSize)
       this.uploadProgress.loaded = "0 MB"
       this.uploadProgress.speed = "0"
       this.uploadProgress.percentage = 0
 
       try {
-        const result = await this.$emit('upload-file', file, this.token, (progress) => {
+        const result = await this.$emit('upload-file', files, this.token, isGroupUpload, this.groupName, (progress) => {
           this.uploadProgress.percentage = progress.percentage
           this.uploadProgress.loaded = this.formatBytes(progress.loaded)
           this.uploadProgress.total = this.formatBytes(progress.total)
@@ -218,10 +301,15 @@ export default {
         this.uploadResult = result
         this.uploadComplete = true
         this.$emit('upload-success')
+        
+        // Reset upload type and group name after successful upload
+        this.uploadType = 'individual'
+        this.groupName = ''
       } catch (error) {
         this.uploadError = error.error || 'Upload failed'
       } finally {
         this.uploading = false
+        this.pendingFiles = null
       }
     },
 
@@ -258,11 +346,50 @@ export default {
       }
     },
 
+    async copyGroupCode() {
+      try {
+        await navigator.clipboard.writeText(this.uploadResult.group.id)
+        this.showCopyFeedback('Group code copied!')
+      } catch (err) {
+        console.error("Failed to copy:", err)
+      }
+    },
+
+    async copyGroupLink() {
+      try {
+        await navigator.clipboard.writeText(this.groupUrl)
+        this.showCopyFeedback('Group link copied!')
+      } catch (err) {
+        console.error("Failed to copy:", err)
+      }
+    },
+
     showCopyFeedback(message) {
       this.copyTooltip = message
       setTimeout(() => {
         this.copyTooltip = 'Click to copy'
       }, 2000)
+    },
+
+    handleCreateGroup(groupName) {
+      this.uploadType = 'group'
+      this.groupName = groupName
+      this.showGroupChoiceModal = false
+      
+      // Proceed with upload using pending files
+      if (this.pendingFiles) {
+        this.handleFiles(this.pendingFiles)
+      }
+    },
+
+    handleUploadIndividually() {
+      this.uploadType = 'individual'
+      this.showGroupChoiceModal = false
+      
+      // Proceed with upload using pending files
+      if (this.pendingFiles) {
+        this.handleFiles(this.pendingFiles)
+      }
     }
   },
   watch: {
@@ -273,6 +400,10 @@ export default {
         this.uploadComplete = false
         this.uploadError = null
         this.uploadResult = null
+        this.showGroupChoiceModal = false
+        this.pendingFiles = null
+        this.uploadType = 'individual'
+        this.groupName = ''
         this.uploadProgress = {
           percentage: 0,
           speed: '0',
