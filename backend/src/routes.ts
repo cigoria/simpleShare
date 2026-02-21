@@ -87,6 +87,21 @@ router.get("/getAllFiles",async (req:Request,res:Response)=>{
   return res.status(200).json(files)
 })
 
+router.post("/changePassword", async (req:Request,res:Response)=>{
+  if (!req.headers.authorization){return res.sendStatus(401)}
+  if (!req.body.old_password || !req.body.new_password){return res.sendStatus(400)}
+  let user_permission:auth.PermissionResponse = await auth.validateUserToken(req.headers.authorization,null);
+  if (user_permission.level === "none") {return res.sendStatus(401)}
+  let action_result:Number = await userActions.changePassword(user_permission.user_id,req.body.old_password,req.body.new_password)
+  
+  switch (action_result){
+    case(0):res.sendStatus(200);break;
+    case(1):res.status(400).json({message:"New password cannot be the same as old password!"});break;
+    case(2):res.sendStatus(401);break;
+    case(3):res.sendStatus(500);console.log("Invalid user_id?!?!?!?");break;
+    case(4):res.sendStatus(500);break;
+  }
+})
 
 
 export default router;
