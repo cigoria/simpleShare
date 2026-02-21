@@ -121,8 +121,12 @@ export default {
     })
 
     // Event handlers
-    const handleLogin = async (username, password) => {
-      return await login(username, password)
+    const handleLogin = async (username, password, callback) => {
+      const result = await login(username, password)
+      if (callback) {
+        callback(result)
+      }
+      return result
     }
 
     const handleLogout = async () => {

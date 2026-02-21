@@ -75,12 +75,16 @@ export default {
       this.error = ''
 
       try {
-        const result = await this.$emit('login', this.username, this.password)
-        if (result.success) {
+        const loginPromise = new Promise((resolve) => {
+          this.$emit('login', this.username, this.password, resolve)
+        })
+        
+        const result = await loginPromise
+        if (result && result.success) {
           this.$emit('close')
           this.resetForm()
         } else {
-          this.error = result.error || 'Login failed'
+          this.error = (result && result.error) || 'Login failed'
         }
       } catch (error) {
         this.error = 'Network error. Please try again.'
