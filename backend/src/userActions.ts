@@ -28,7 +28,6 @@ export async function getUsedQuota(user_id:string | null) {
     if (user_id === null) {return 1}
     conn = await pool.getConnection();
     let used_res = await conn.query("SELECT SUM(file_size_in_bytes) AS total_used FROM file_index WHERE user_id = ?",[user_id]);
-    console.log(used_res)
     return used_res[0].total_used;
   } finally {if (conn) {conn.release();}}
 }
