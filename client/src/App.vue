@@ -2,7 +2,6 @@
   <div id="app" class="m-0 p-0 bg-bg text-white font-inter flex justify-center items-center h-screen overflow-hidden select-none mobile:overflow-x-hidden">
     <router-view />
     
-    <!-- Notification Container -->
     <div class="fixed top-4 right-4 z-50 space-y-2 transition-all duration-300 ease-in-out">
       <TransitionGroup name="notification-list" tag="div" class="flex flex-col space-y-2">
         <Notification
@@ -63,7 +62,6 @@ body {
   color: var(--text);
 }
 
-/* Notification list transitions for smooth repositioning */
 .notification-list-move,
 .notification-list-enter-active,
 .notification-list-leave-active {

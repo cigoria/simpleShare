@@ -32,7 +32,6 @@
       @show-change-password="showChangePasswordModal = true"
       @logout="handleLogout" />
 
-    <!-- My Files Modal -->
     <MyFilesModal 
       :visible="showMyFilesModal"
       :files="files"
@@ -41,14 +40,12 @@
       @download="downloadFile"
       @delete="handleDeleteFile" />
 
-    <!-- Change Password Modal -->
     <ChangePasswordModal 
       :visible="showChangePasswordModal"
       :token="sessionToken"
       @close="showChangePasswordModal = false"
       @change-password="handleChangePassword" />
 
-    <!-- Register User Modal -->
     <RegisterUserModal 
       :visible="showRegisterModal"
       :token="sessionToken"
@@ -106,7 +103,6 @@ export default {
     
     const { showNotification } = useNotification()
 
-    // Modal states
     const showLoginModal = ref(false)
     const showUploadModal = ref(false)
     const showHamburgerMenu = ref(false)
@@ -114,7 +110,6 @@ export default {
     const showChangePasswordModal = ref(false)
     const showRegisterModal = ref(false)
 
-    // Initialize auth and data
     onMounted(async () => {
       await verifyAccessToken()
       if (isAuthenticated.value) {
@@ -123,14 +118,12 @@ export default {
       }
     })
 
-    // Event handlers
     const handleLogin = async (username, password, callback) => {
       const result = await login(username, password)
       if (callback) {
         callback(result)
       }
       
-      // Show notification on successful login
       if (result && result.success) {
         showNotification('Login successful!', 'ok')
         await updateQuotaDisplay(token)
@@ -164,8 +157,6 @@ export default {
     }
 
     const handleUploadSuccess = () => {
-      // Don't close modal automatically - let user see the code and copy it
-      // Success notification is already shown in handleFileUpload
     }
 
     const handleDeleteFile = async (code) => {
@@ -243,7 +234,6 @@ export default {
           result = { success: false, error: error.error || "Registration failed" }
         }
 
-        // Call the callback with the result
         if (callback) {
           callback(result)
         }

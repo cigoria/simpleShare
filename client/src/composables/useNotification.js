@@ -1,3 +1,4 @@
+// Global notification system composable
 import { ref, reactive } from 'vue'
 
 const notifications = ref([])

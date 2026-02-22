@@ -12,7 +12,6 @@
         <span class="material-icons-outlined mobile:text-sm">close</span>
       </button>
       
-      <!-- Drop Zone -->
       <div
         v-if="!uploading && !uploadComplete"
         class="font-inter text-2xl mobile:text-xl relative h-[80%] mobile:h-[70%] w-[80%] mobile:w-[90%] flex items-center justify-center m-[100px_auto] mobile:m-[50px_auto] rounded-[28px] mobile:rounded-[20px] border-0 transition-all duration-300 drop_zone cursor-pointer hover:scale-105"
@@ -27,7 +26,6 @@
         </p>
       </div>
 
-      <!-- Upload Progress -->
       <div 
         v-if="uploading"
         class="w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-8 mobile:p-4 flex flex-col items-center justify-center space-y-6 mobile:space-y-4">

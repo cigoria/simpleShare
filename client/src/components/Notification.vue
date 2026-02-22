@@ -21,7 +21,6 @@
         </p>
       </div>
       
-      <!-- Progress bar -->
       <div class="mt-3 h-1 bg-white/20 rounded-full overflow-hidden">
         <div
           ref="progressBar"
@@ -109,12 +108,10 @@ export default {
       this.remainingTime = 3000
       this.isPaused = false
       
-      // Main timer for removing notification
       this.timer = setTimeout(() => {
         this.removeNotification()
       }, this.remainingTime)
       
-      // Progress bar timer
       const startTime = Date.now()
       const duration = this.remainingTime
       
@@ -135,10 +132,8 @@ export default {
         this.isPaused = true
         clearTimeout(this.timer)
         
-        // Calculate remaining time based on current progress
         this.remainingTime = Math.round((this.progressWidth / 100) * 3000)
         
-        // Clear progress timer
         if (this.progressTimer) {
           clearInterval(this.progressTimer)
           this.progressTimer = null
@@ -149,12 +144,10 @@ export default {
       if (this.isPaused && this.remainingTime > 0) {
         this.isPaused = false
         
-        // Main timer for removing notification
         this.timer = setTimeout(() => {
           this.removeNotification()
         }, this.remainingTime)
         
-        // Progress bar timer - resume from current progress
         const startTime = Date.now()
         const duration = this.remainingTime
         const startProgress = this.progressWidth
@@ -192,7 +185,7 @@ export default {
       el.style.transform = 'translateX(100%) scale(0.9)'
     },
     onEnter(el, done) {
-      el.offsetHeight // Force reflow
+      el.offsetHeight
       el.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
       el.style.opacity = '1'
       el.style.transform = 'translateX(0) scale(1)'

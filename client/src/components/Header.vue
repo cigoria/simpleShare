@@ -1,7 +1,6 @@
 <template>
   <div id="header"
     class="absolute top-0 left-0 w-full h-[100px] mobile:h-[80px] border-b border-b-[length:1px] border-b-gradient-to-r from-blue-400 via-green-400 to-blue-400 animate-slide-down">
-    <!-- Top header bar -->
     <Logo />
     <div
       class="absolute top-5 mobile:top-3 right-5 mobile:right-3 flex justify-end items-end flex-row-reverse gap-2 mobile:gap-1">

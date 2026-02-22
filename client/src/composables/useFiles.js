@@ -1,3 +1,4 @@
+// File management composable for upload, download, and quota operations
 import { ref } from 'vue'
 
 export function useFiles() {
@@ -52,12 +53,10 @@ export function useFiles() {
       quotaInfo.value.used = data.used
       quotaInfo.value.total = data.total
     } catch (error) {
-      // Fallback display when quota endpoint fails or doesn't exist
       quotaInfo.value.text = "? MB of ? MB"
       quotaInfo.value.percentage = 100
       quotaInfo.value.used = 0
       quotaInfo.value.total = 0
-      // Only log error if it's not a 404 (expected when quota endpoint doesn't exist)
       if (!error.message.includes('404')) {
         console.error("Failed to fetch quota:", error)
       }
@@ -76,7 +75,6 @@ export function useFiles() {
       const result = await response.json()
       files.value = result.map(item => {
         if (item.type === "group") {
-          // Handle group items
           return {
             code: item.code,
             name: item.name,
@@ -96,7 +94,6 @@ export function useFiles() {
             fileCount: item.files.length
           }
         } else {
-          // Handle individual files
           let decodedName = item.original_name
           try {
             decodedName = decodeURIComponent(escape(item.original_name))
@@ -187,7 +184,6 @@ export function useFiles() {
     return new Promise((resolve, reject) => {
       const formData = new FormData()
       
-      // Debug logging - check what files we received
       console.log('Files received:', files)
       console.log('Files type:', typeof files)
       console.log('Files length:', files.length)
@@ -199,7 +195,6 @@ export function useFiles() {
       }
       
       if (isGroupUpload && files.length > 0) {
-        // Group upload
         console.log('Group upload - files to upload:', files.length)
         for (let i = 0; i < files.length; i++) {
           console.log(`Appending file ${i}:`, files[i])
@@ -208,8 +203,7 @@ export function useFiles() {
         formData.append("groupName", groupName)
         formData.append("createGroup", "true")
       } else {
-        // Single file upload (backward compatibility)
-        const file = files[0] // FileList is array-like, get first item
+        const file = files[0]
         console.log('Appending file to formData:', file)
         formData.append("file", file)
       }
@@ -267,12 +261,10 @@ export function useFiles() {
         reject({ success: false, error: "Network error" })
       })
       
-      // Use appropriate endpoint
       const endpoint = isGroupUpload ? '/upload-group' : '/upload'
       xhr.open('POST', endpoint)
       xhr.setRequestHeader('Authorization', token)
       
-      // Debug logging
       console.log('Upload request:', {
         endpoint,
         token: token ? 'present' : 'missing',
