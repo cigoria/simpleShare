@@ -154,6 +154,15 @@ export function useFiles() {
     document.body.removeChild(link)
   }
 
+  const downloadGroup = (code) => {
+    const link = document.createElement("a")
+    link.href = "/files/" + code
+    link.style.display = "none"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const deleteFile = async (code, token, deleteSubItems = false) => {
     try {
       const url = deleteSubItems ? `/delete/${code}?deleteSubItems=true` : `/delete/${code}`
@@ -358,6 +367,7 @@ export function useFiles() {
     updateFilesDisplay,
     checkFileExists,
     downloadFile,
+    downloadGroup,
     deleteFile,
     uploadFile
   }

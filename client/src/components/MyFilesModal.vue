@@ -55,7 +55,17 @@
                           {{ isGroupExpanded(item.code) ? 'expand_more' : 'chevron_right' }}
                         </span>
                         <span v-else></span>
-                        {{ item.code }}
+                        <span 
+                          class="cursor-pointer hover:text-secondary-button transition-colors"
+                          @click.stop="copyCode(item.code, $event)"
+                          title="Click to copy code">
+                          {{ item.code }}
+                          <span 
+                            v-if="showCopyIcon[item.code]"
+                            class="material-icons-outlined text-sm ml-1 animate-bounce">
+                            content_copy
+                          </span>
+                        </span>
                       </div>
                     </td>
                     <td class="px-4 py-2 align-middle min-w-[200px]">
@@ -77,6 +87,13 @@
                     <td class="px-4 py-2 align-middle whitespace-nowrap">{{ item.formattedSize }}</td>
                     <td class="px-2 py-2 text-center align-middle">
                       <div class="flex justify-center gap-2">
+                        <button 
+                          v-if="item.type === 'group'"
+                          class="download-button bg-secondary-button text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center" 
+                          @click.stop="$emit('download-group', item.code)" 
+                          title="Download Group">
+                          <span class="material-icons-outlined text-lg">download</span>
+                        </button>
                         <button 
                           v-if="item.type === 'file'"
                           class="download-button bg-secondary-button text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center" 
@@ -100,7 +117,17 @@
                       :key="file.code"
                       class="border-b border-[#444] hover:bg-black/10 h-[50px] bg-gray-900/20">
                       <td class="px-4 py-2 align-middle whitespace-nowrap pl-12">
-                        {{ file.code }}
+                        <span 
+                          class="cursor-pointer hover:text-secondary-button transition-colors"
+                          @click.stop="copyCode(file.code, $event)"
+                          title="Click to copy code">
+                          {{ file.code }}
+                          <span 
+                            v-if="showCopyIcon[file.code]"
+                            class="material-icons-outlined text-sm ml-1 animate-bounce">
+                            content_copy
+                          </span>
+                        </span>
                       </td>
                       <td class="px-4 py-2 align-middle min-w-[200px] pl-12">
                         <div class="flex items-center gap-2">
@@ -167,7 +194,7 @@ export default {
     files: Array,
     token: String
   },
-  emits: ['close', 'download', 'delete'],
+  emits: ['close', 'download', 'download-group', 'delete'],
   setup() {
     const { confirmDelete, confirm, confirmDeleteGroup } = useConfirm()
     
@@ -179,7 +206,8 @@ export default {
   },
   data() {
     return {
-      expandedGroups: new Set()
+      expandedGroups: new Set(),
+      showCopyIcon: {}
     }
   },
   methods: {
@@ -223,6 +251,31 @@ export default {
         }
       } catch {
         // User cancelled deletion
+      }
+    },
+    async copyCode(code, event) {
+      try {
+        await navigator.clipboard.writeText(code)
+        // Show copy icon
+        this.showCopyIcon[code] = true
+        setTimeout(() => {
+          this.showCopyIcon[code] = false
+        }, 2000)
+      } catch (err) {
+        console.error('Failed to copy code:', err)
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea')
+        textArea.value = code
+        document.body.appendChild(textArea)
+        textArea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textArea)
+        
+        // Show copy icon
+        this.showCopyIcon[code] = true
+        setTimeout(() => {
+          this.showCopyIcon[code] = false
+        }, 2000)
       }
     }
   }

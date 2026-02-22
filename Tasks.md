@@ -18,11 +18,6 @@
 
 # Frontend Tasks
 
-- [ ] Copy code when clicked in my files
-- [ ] My files group download
-
-<br>
-
 - [ ] Responsive design for mobile devices
 - [ ] Search/filter functionality for files and groups
 - [ ] Download history

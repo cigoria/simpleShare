@@ -39,6 +39,7 @@
       :token="sessionToken"
       @close="showMyFilesModal = false"
       @download="downloadFile"
+      @download-group="downloadGroup"
       @delete="handleDeleteFile" />
 
     <ChangePasswordModal 
@@ -98,6 +99,7 @@ export default {
       updateFilesDisplay, 
       checkFileExists: checkFile, 
       downloadFile: download, 
+      downloadGroup: downloadGroupFunc,
       deleteFile: deleteFileFunc, 
       uploadFile: upload 
     } = useFiles()
@@ -293,6 +295,10 @@ export default {
       download(code)
     }
 
+    const downloadGroup = (code) => {
+      downloadGroupFunc(code)
+    }
+
     return {
       // Auth
       sessionToken,
@@ -321,7 +327,8 @@ export default {
       handleChangePassword,
       handleRegisterUser,
       checkFileExists,
-      downloadFile
+      downloadFile,
+      downloadGroup
     }
   }
 }
