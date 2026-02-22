@@ -195,21 +195,20 @@ router.get("/files/:file_code", async (req:Request, res:Response) => {
   if (db_result.type === "file"){
     let stored_name = db_result.stored_filename;
     let original_name = db_result.original_name;
-    // Fix encoding for special characters (handle double-encoding)
-    try {original_name = decodeURIComponent(escape(original_name));}
-    catch (e) {original_name = db_result.original_name;}
     const filePath = path.join(process.env.UPLOAD_PATH || './uploads/', stored_name);
     return res.download(filePath, original_name);
   }
   if (db_result.type === "group"){
     res.setHeader("Content-Type", "application/zip")
-    res.setHeader(
-        "Content-Disposition",
-        'attachment; filename="download.zip"'
-    )
-    const archive = archiver("zip", {
-        zlib: { level: 9 }
-    })
+    res.setHeader("Content-Disposition",'attachment; filename="download.zip"')
+    const archive = archiver("zip", {zlib: { level: 9 }})
+    archive.on("error", (err: Error) => {res.status(500).end();console.log(err)})
+    archive.pipe(res)
+    for (const file of db_result.files) {
+      let file_path = path.join(process.env.UPLOAD_PATH || './uploads/', file.stored_filename)
+      archive.file(file_path, {name: file.original_name})
+    }
+    await archive.finalize()
   }
 });
 
