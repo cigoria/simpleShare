@@ -71,7 +71,7 @@
                     <td class="px-4 py-2 align-middle min-w-[200px]">
                       <div class="flex items-center gap-2">
                         <span v-if="item.type === 'group'" class="material-icons-outlined text-blue-400">folder</span>
-                        <span v-else class="material-icons-outlined text-gray-400">insert_drive_file</span>
+                        <span v-else class="material-icons-outlined text-gray-400">{{ getFileIcon(item) }}</span>
                         <span>{{ item.name }}</span>
                         <span v-if="item.type === 'group'" class="text-xs text-gray-400">({{ item.fileCount }} files)</span>
                       </div>
@@ -131,7 +131,7 @@
                       </td>
                       <td class="px-4 py-2 align-middle min-w-[200px] pl-12">
                         <div class="flex items-center gap-2">
-                          <span class="material-icons-outlined text-gray-400 text-sm">insert_drive_file</span>
+                          <span class="material-icons-outlined text-gray-400 text-sm">{{ getFileIcon(file) }}</span>
                           <span>{{ file.original_name || file.name }}</span>
                         </div>
                       </td>
@@ -211,6 +211,49 @@ export default {
     }
   },
   methods: {
+    getFileIcon(fileData) {
+      // Use mimetype if available, otherwise fall back to filename extension
+      let mimeType = '';
+      if (fileData.mimetype) {
+        mimeType = fileData.mimetype.split('/')[0]; // Get the part before '/'
+      } else {
+        // Fallback to extension if mimetype is not available
+        const extension = fileData.name?.split('.').pop().toLowerCase() || 
+                         fileData.original_name?.split('.').pop().toLowerCase() || '';
+        const extensionToMime = {
+          'pdf': 'application/pdf',
+          'doc': 'application/msword',
+          'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'txt': 'text/plain',
+          'jpg': 'image/jpeg',
+          'jpeg': 'image/jpeg',
+          'png': 'image/png',
+          'gif': 'image/gif',
+          'mp3': 'audio/mpeg',
+          'wav': 'audio/wav',
+          'mp4': 'video/mp4',
+          'avi': 'video/x-msvideo',
+          'zip': 'application/zip',
+          'js': 'application/javascript',
+          'css': 'text/css',
+          'html': 'text/html',
+          'json': 'application/json'
+        };
+        mimeType = extensionToMime[extension]?.split('/')[0] || 'application';
+      }
+
+      const iconMap = {
+        'application': 'insert_drive_file',
+        'text': 'text_snippet',
+        'image': 'image',
+        'audio': 'audio_file',
+        'video': 'video_file',
+        'multipart': 'folder_zip'
+      };
+      
+      return iconMap[mimeType] || iconMap['application'];
+    },
+    
     toggleGroup(groupCode) {
       if (this.expandedGroups.has(groupCode)) {
         this.expandedGroups.delete(groupCode)
