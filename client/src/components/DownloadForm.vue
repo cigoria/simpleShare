@@ -40,12 +40,24 @@
         {{ fileInfo.text }}
       </div>
     </form>
+
+    <!-- File Card Display -->
+    <FileCard 
+      v-if="fileData"
+      :file-data="fileData"
+      @download-file="handleDownloadFile"
+      @download-group="handleDownloadGroup" />
   </div>
 </template>
 
 <script>
+import FileCard from './FileCard.vue'
+
 export default {
   name: 'DownloadForm',
+  components: {
+    FileCard
+  },
   data() {
     return {
       inputs: Array(6).fill(null).map(() => ({ value: '' })),
@@ -53,7 +65,8 @@ export default {
         text: '',
         color: '',
         loading: false
-      }
+      },
+      fileData: null
     }
   },
   computed: {
@@ -122,30 +135,66 @@ export default {
         this.fileInfo.loading = true
         this.fileInfo.text = 'Checking...'
         this.fileInfo.color = "#6792ff"
+        this.fileData = null
 
         try {
           const result = await new Promise((resolve) => {
             this.$emit('check-file', this.fullCode, resolve)
           })
+          
+          // Debug log
+          console.log('Backend result:', result)
+          
           if (result && result.exists) {
-            this.fileInfo.text = result.original_name || result.filename || 'File found'
+            this.fileInfo.text = result.original_name || result.stored_filename || 'File found'
             this.fileInfo.color = "#5ef78c"
             this.fileInfo.exists = true
+            
+            // Set fileData for the FileCard component
+            if (result.type === 'group') {
+              this.fileData = {
+                type: 'group',
+                code: result.id,
+                name: result.name,
+                create_date: result.created_at,
+                total_size: result.files.reduce((total, file) => total + file.file_size_in_bytes, 0),
+                files: result.files.map(file => ({
+                  code: file.id,
+                  original_name: file.original_name || file.stored_filename,
+                  size: file.file_size_in_bytes,
+                  upload_date: file.date_added
+                }))
+              }
+            } else {
+              this.fileData = {
+                type: 'file',
+                name: result.original_name || result.stored_filename,
+                size: result.file_size_in_bytes,
+                upload_date: result.date_added
+              }
+            }
+            
+            // Debug log
+            console.log('FileData set:', this.fileData)
           } else {
             this.fileInfo.text = "File not found"
             this.fileInfo.color = "#f77b5e"
             this.fileInfo.exists = false
+            this.fileData = null
           }
         } catch (error) {
+          console.error('Error in checkFileExists:', error)
           this.fileInfo.text = "Network error"
           this.fileInfo.color = "#f77b5e"
           this.fileInfo.exists = false
+          this.fileData = null
         } finally {
           this.fileInfo.loading = false
         }
       } else {
         this.fileInfo.text = ""
         this.fileInfo.exists = false
+        this.fileData = null
       }
     },
 
@@ -187,7 +236,16 @@ export default {
       this.inputs.forEach(input => input.value = '')
       this.fileInfo.text = ""
       this.fileInfo.exists = false
+      this.fileData = null
       this.$refs.codeInputs[0].focus()
+    },
+
+    handleDownloadFile(code) {
+      this.$emit('download', code)
+    },
+
+    handleDownloadGroup(code) {
+      this.$emit('download', code)
     }
   }
 }
