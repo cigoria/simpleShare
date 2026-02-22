@@ -9,8 +9,7 @@
 
 # Frontend Tasks
 
-- Fix invidual uploads
-- Group management UI (create, view, delete groups)
+- Group management UI (view, delete groups)
 - Download progress indicator for individual files and groups
 - Responsive design for mobile devices
 - Error handling and user feedback for failed uploads
