@@ -39,10 +39,6 @@ export default {
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons+Outlined');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
   --primary-button: #6792ff;
   --secondary-button: #5ef78c;

@@ -2,14 +2,26 @@ import express from "express";
 import router from "./routes";
 const os = require("os")
 import path from "path"
+import history from 'connect-history-api-fallback';
 require("dotenv").config();
 
 
 const PORT = process.env.PORT || 3000;
 const app = express()
-app.use(express.static(path.join(__dirname, 'public')));
+
+// API route-ok először
 app.use(express.json());
-app.use("/",router)
+app.use("/api", router)
+
+// Statikus fájlok kiszolgálása a buildelt frontend mappából
+app.use(express.static(path.join(process.cwd(), 'dist/public')));
+
+// History API fallback a SPA útválasztáshoz (a statikus fájlok után)
+app.use(history({
+  rewrites: [
+    { from: /^\/api\/.*$/, to: (context: any) => context.parsedUrl.pathname }
+  ]
+}));
 
 
 

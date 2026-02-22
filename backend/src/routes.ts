@@ -1,18 +1,9 @@
 import { Request, Response } from 'express';
 const express = require('express');
-const path = require("path")
 const router = express.Router();
 import * as auth from "./auth";
 import * as userActions from "./userActions"
 import * as adminActions from "./adminActions"
-
-
-
-// Base routes
-
-router.get("/", (req: Request,res:Response) => {
-  res.sendFile(path.join(__dirname, './public/index.html'));
-})
 
 
 // Admin action API endpoints

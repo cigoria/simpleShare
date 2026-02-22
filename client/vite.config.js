@@ -5,6 +5,9 @@ const path = require("path")
 export default defineConfig({
   root: path.resolve(__dirname, './'),
   plugins: [vue()],
+  css: {
+    postcss: './postcss.config.js',
+  },
   build: {
     outDir: '../dist/public',
     emptyOutDir: true,
