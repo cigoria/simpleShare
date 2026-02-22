@@ -12,7 +12,7 @@ const pool = mariadb.createPool({
 });
 
 // Create database structure!
-const file_groups:string = `CREATE TABLE \`file_groups\` (
+const file_groups:string = `CREATE TABLE IF NOT EXISTS \`file_groups\` (
   \`id\` varchar(255) NOT NULL,
   \`name\` varchar(255) NOT NULL,
   \`file_ids\` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(\`file_ids\`)),
@@ -23,7 +23,7 @@ const file_groups:string = `CREATE TABLE \`file_groups\` (
   CONSTRAINT \`1\` FOREIGN KEY (\`user_id\`) REFERENCES \`users\` (\`id\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci`
 
-const file_index:string = `CREATE TABLE \`file_index\` (
+const file_index:string = `CREATE TABLE IF NOT EXISTS \`file_index\` (
   \`id\` varchar(6) NOT NULL,
   \`visibility\` int(11) NOT NULL DEFAULT 1,
   \`date_added\` timestamp NULL DEFAULT curtime(),
@@ -35,7 +35,7 @@ const file_index:string = `CREATE TABLE \`file_index\` (
   PRIMARY KEY (\`id\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci`
 
-const session_tokens:string = `CREATE TABLE \`session_tokens\` (
+const session_tokens:string = `CREATE TABLE IF NOT EXISTS \`session_tokens\` (
   \`token\` varchar(200) NOT NULL,
   \`user_id\` text NOT NULL,
   \`is_valid\` tinyint(1) DEFAULT 1,
@@ -44,14 +44,14 @@ const session_tokens:string = `CREATE TABLE \`session_tokens\` (
   PRIMARY KEY (\`token\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci`
 
-const settings:string = `CREATE TABLE \`settings\` (
+const settings:string = `CREATE TABLE IF NOT EXISTS \`settings\` (
   \`name\` text NOT NULL,
   \`num_value\` bigint(20) DEFAULT NULL,
   \`text_value\` text DEFAULT NULL,
   \`comment\` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci`
 
-const users:string = `CREATE TABLE \`users\` (
+const users:string = `CREATE TABLE IF NOT EXISTS \`users\` (
   \`id\` varchar(255) NOT NULL DEFAULT uuid(),
   \`username\` varchar(255) NOT NULL,
   \`password_hash\` text NOT NULL,
