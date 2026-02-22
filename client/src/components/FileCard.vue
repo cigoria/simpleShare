@@ -198,7 +198,7 @@ export default {
 <style scoped>
 .file-card-container {
   margin-top: 20px;
-  max-width: 500px;
+  max-width: 700px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -250,7 +250,7 @@ export default {
 
 .file-icon .material-icons-outlined,
 .group-icon .material-icons-outlined {
-  font-size: 24px;
+  font-size: 32px;
   color: theme('colors.text');
 }
 
@@ -267,6 +267,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: left;
 }
 
 .file-details, .group-details {
@@ -274,7 +275,8 @@ export default {
   color: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .separator {
@@ -307,7 +309,7 @@ export default {
 }
 
 .collective-download-btn .material-icons-outlined {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .files-list {
@@ -337,7 +339,7 @@ export default {
 }
 
 .file-item .file-icon .material-icons-outlined {
-  font-size: 20px;
+  font-size: 28px;
 }
 
 .file-item .file-info {
@@ -378,7 +380,7 @@ export default {
 }
 
 .download-btn .material-icons-outlined {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 /* Mobile responsive */
