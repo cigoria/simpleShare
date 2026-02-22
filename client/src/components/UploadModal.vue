@@ -7,14 +7,14 @@
       class="z-[55] bg-black/20 backdrop-blur-[20px] absolute h-[calc(100vh-20vh)] mobile:h-[calc(100vh-10vh)] w-[calc(100vw-30vw)] mobile:w-[calc(100vw-5vw)] flex items-center justify-center flex-col m-[100px_auto] mobile:m-[50px_auto] mobile:mx-4 rounded-[28px] mobile:rounded-[20px] border-3 border-[#a1a1a1] transition-all duration-300 modal animate-scale-in"
       @click.stop>
       <button
-        class="absolute top-5 mobile:top-3 h-[42px] mobile:h-[36px] right-5 mobile:right-3 bg-primary-button text-black border-none px-[10px] mobile:px-[8px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] text-center z-10 close-btn transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-primary-button/50"
+        class="absolute top-5 mobile:top-3 h-[42px] mobile:h-[36px] right-5 mobile:right-3 bg-primary-button text-black border-none px-[10px] mobile:px-[8px] py-[10px] mobile:py-[8px] rounded-lg text-lg mobile:text-base cursor-pointer tracking-[1px] text-center z-[70] close-btn transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-primary-button/50"
         @click="$emit('close')">
         <span class="material-icons-outlined mobile:text-sm">close</span>
       </button>
       
       <div
         v-if="!uploading && !uploadComplete && !uploadError"
-        class="font-inter text-2xl mobile:text-xl relative h-[80%] mobile:h-[70%] w-[80%] mobile:w-[90%] flex items-center justify-center m-[100px_auto] mobile:m-[50px_auto] rounded-[28px] mobile:rounded-[20px] border-0 transition-all duration-300 drop_zone cursor-pointer hover:scale-105"
+        class="font-inter text-2xl mobile:text-xl relative h-[80%] mobile:h-[70%] w-[80%] mobile:w-[90%] flex items-center justify-center m-[100px_auto] mobile:m-[50px_auto] rounded-[28px] mobile:rounded-[20px] border-0 transition-all duration-300 drop_zone cursor-pointer hover:scale-105 z-[60]"
         :class="{ 'dragover': isDragOver }"
         @click.stop="triggerFileInput"
         @dragover.prevent="handleDragOver"
@@ -28,7 +28,7 @@
 
       <div 
         v-if="uploading"
-        class="w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-8 mobile:p-4 flex flex-col items-center justify-center space-y-6 mobile:space-y-4">
+        class="w-full max-w-2xl mobile:max-w-full mobile:px-4 mx-auto p-8 mobile:p-4 flex flex-col items-center justify-center space-y-6 mobile:space-y-4 relative z-[60]">
         <div class="w-full">
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm mobile:text-xs text-gray-300">Upload Progress</span>
@@ -55,7 +55,7 @@
       <!-- Upload Status/Error -->
       <div 
         v-if="uploadError"
-        class="w-full max-w-lg mobile:max-w-full mobile:px-6 mx-auto flex flex-col items-center justify-center px-8 py-6">
+        class="w-full max-w-lg mobile:max-w-full mobile:px-6 mx-auto flex flex-col items-center justify-center px-8 py-6 relative z-[60]">
         
         <!-- Error Header -->
         <div class="text-center mb-6">
@@ -151,7 +151,7 @@
       <!-- Success Content -->
       <div 
         v-if="uploadComplete"
-        class="space-y-6 mobile:space-y-4">
+        class="space-y-6 mobile:space-y-4 relative z-[60]">
         <!-- Individual Success -->
         <div 
           v-if="uploadResult.code && !uploadResult.files"
