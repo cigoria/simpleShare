@@ -311,7 +311,6 @@ export async function deleteItem(code:string|string[],deleteSubItems:boolean=fal
     // Get item and type of it
     let type:ItemType = "file"
     let files_result = await pool.query("SELECT * FROM file_index WHERE id=?",[code])
-    console.log(code)
     if (files_result.length === 0){type="group"}
     if (type === "group"){
       let group_results = await pool.query("SELECT * FROM file_groups WHERE id=?",[code])
@@ -330,9 +329,9 @@ export async function deleteItem(code:string|string[],deleteSubItems:boolean=fal
       if(validation!==null && files_result[0].user_id !== validation){return 3} // Unauthorized!
       let groups_containing_file = await pool.query("SELECT * FROM file_groups WHERE file_ids LIKE ?",[`%${code}%`])
       for (let group of groups_containing_file){
-        let file_ids = JSON.parse(group.file_ids)
+        let file_ids = group.file_ids
         if(file_ids.indexOf(code)>-1){file_ids.splice(file_ids.indexOf(code),1)}
-        await pool.query("UPDATE file_groups SET file_ids = ? WHERE id = ?",[JSON.stringify(group.file_ids), group.id]);
+        await pool.query("UPDATE file_groups SET file_ids = ? WHERE id = ?",[JSON.stringify(file_ids), group.id]);
       }
       try {await fs.unlink(process.env.UPLOAD_PATH + files_result[0].stored_filename);} 
       catch (err) {
