@@ -6,8 +6,10 @@ const confirmState = ref({
   message: '',
   confirmText: '',
   cancelText: '',
+  secondaryText: '',
   confirmIcon: '',
   cancelIcon: '',
+  secondaryIcon: '',
   type: 'info',
   closeOnBackdrop: true,
   resolve: null,
@@ -60,6 +62,26 @@ export function useConfirm() {
     })
   }
 
+  const confirmDeleteGroup = (groupName, options = {}) => {
+    return new Promise((resolve, reject) => {
+      confirmState.value = {
+        visible: true,
+        title: 'Delete Group',
+        message: `What would you like to do with the group "${groupName}"?`,
+        confirmText: 'Delete group only',
+        cancelText: 'Cancel',
+        secondaryText: 'Delete group and files',
+        confirmIcon: 'folder',
+        cancelIcon: 'close',
+        secondaryIcon: 'delete_forever',
+        type: 'error',
+        closeOnBackdrop: true,
+        resolve,
+        reject
+      }
+    })
+  }
+
   const confirmSuccess = (message, options = {}) => {
     return showConfirm({
       title: 'Success',
@@ -71,7 +93,14 @@ export function useConfirm() {
 
   const handleConfirm = () => {
     if (confirmState.value.resolve) {
-      confirmState.value.resolve(true)
+      confirmState.value.resolve('confirm')
+    }
+    hideConfirm()
+  }
+
+  const handleSecondary = () => {
+    if (confirmState.value.resolve) {
+      confirmState.value.resolve('secondary')
     }
     hideConfirm()
   }
@@ -94,9 +123,11 @@ export function useConfirm() {
     showConfirm,
     confirm,
     confirmDelete,
+    confirmDeleteGroup,
     confirmWarning,
     confirmSuccess,
     handleConfirm,
+    handleSecondary,
     handleCancel,
     hideConfirm
   }

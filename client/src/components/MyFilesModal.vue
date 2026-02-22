@@ -169,11 +169,12 @@ export default {
   },
   emits: ['close', 'download', 'delete'],
   setup() {
-    const { confirmDelete, confirm } = useConfirm()
+    const { confirmDelete, confirm, confirmDeleteGroup } = useConfirm()
     
     return {
       confirmDelete,
-      confirm
+      confirm,
+      confirmDeleteGroup
     }
   },
   data() {
@@ -208,18 +209,17 @@ export default {
     },
     async handleDelete(code) {
       try {
-        await this.confirmDelete('this file')
-        const result = await this.$emit('delete', code)
-        if (result && result.success) {
-          // File deleted successfully, parent will update the files list
+        // Find the item to determine if it's a group or file
+        const item = this.files.find(f => f.code === code)
+        
+        if (item?.type === 'group') {
+          // Handle group deletion with options
+          const action = await this.confirmDeleteGroup(item.name)
+          this.$emit('delete', code, action)
         } else {
-          await this.confirm('Failed to delete file: ' + (result?.error || 'Unknown error'), {
-            title: 'Error',
-            type: 'error',
-            confirmText: 'OK',
-            cancelText: '',
-            closeOnBackdrop: false
-          })
+          // Handle file deletion
+          await this.confirmDelete('this file')
+          this.$emit('delete', code)
         }
       } catch {
         // User cancelled deletion

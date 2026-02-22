@@ -19,11 +19,14 @@
       :message="confirmState.message"
       :confirm-text="confirmState.confirmText"
       :cancel-text="confirmState.cancelText"
+      :secondary-text="confirmState.secondaryText"
       :confirm-icon="confirmState.confirmIcon"
       :cancel-icon="confirmState.cancelIcon"
+      :secondary-icon="confirmState.secondaryIcon"
       :type="confirmState.type"
       :close-on-backdrop="confirmState.closeOnBackdrop"
       @confirm="handleConfirm"
+      @secondary="handleSecondary"
       @cancel="handleCancel"
     />
   </div>
@@ -43,13 +46,14 @@ export default {
   },
   setup() {
     const { notifications, removeNotification } = useNotification()
-    const { confirmState, handleConfirm, handleCancel } = useConfirm()
+    const { confirmState, handleConfirm, handleSecondary, handleCancel } = useConfirm()
     
     return {
       notifications,
       removeNotification,
       confirmState,
       handleConfirm,
+      handleSecondary,
       handleCancel
     }
   }

@@ -23,19 +23,26 @@
           {{ message }}
         </p>
         
-        <div class="flex gap-3">
+        <div class="flex gap-3 flex-col">
           <button 
             @click="handleConfirm"
-            :class="cancelText ? 'flex-1' : 'w-full'"
-            class="bg-primary-button text-black px-4 py-2.5 rounded-lg font-medium hover:scale-105 transition-transform flex items-center justify-center">
+            class="w-full bg-primary-button text-black px-4 py-2.5 rounded-lg font-medium hover:scale-105 transition-transform flex items-center justify-center">
             <span class="material-icons align-middle mr-2 text-sm">{{ confirmIcon }}</span>
             {{ confirmText }}
           </button>
           
           <button 
+            v-if="secondaryText"
+            @click="handleSecondary"
+            class="w-full bg-red-600 text-white px-4 py-2.5 rounded-lg font-medium hover:scale-105 transition-transform flex items-center justify-center">
+            <span class="material-icons align-middle mr-2 text-sm">{{ secondaryIcon }}</span>
+            {{ secondaryText }}
+          </button>
+          
+          <button 
             v-if="cancelText"
             @click="handleCancel"
-            class="flex-1 bg-gray-700 text-white px-4 py-2.5 rounded-lg font-medium hover:scale-105 transition-transform flex items-center justify-center">
+            class="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg font-medium hover:scale-105 transition-transform flex items-center justify-center">
             <span class="material-icons align-middle mr-2 text-sm">{{ cancelIcon }}</span>
             {{ cancelText }}
           </button>
@@ -74,6 +81,14 @@ export default {
       type: String,
       default: 'close'
     },
+    secondaryText: {
+      type: String,
+      default: ''
+    },
+    secondaryIcon: {
+      type: String,
+      default: 'delete_forever'
+    },
     type: {
       type: String,
       default: 'info',
@@ -107,6 +122,9 @@ export default {
   methods: {
     handleConfirm() {
       this.$emit('confirm')
+    },
+    handleSecondary() {
+      this.$emit('secondary')
     },
     handleCancel() {
       this.$emit('cancel')
