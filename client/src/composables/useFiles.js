@@ -154,9 +154,10 @@ export function useFiles() {
     document.body.removeChild(link)
   }
 
-  const deleteFile = async (code, token) => {
+  const deleteFile = async (code, token, deleteSubItems = false) => {
     try {
-      const response = await fetch("/delete/" + code, {
+      const url = deleteSubItems ? `/delete/${code}?deleteSubItems=true` : `/delete/${code}`
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           Authorization: token,

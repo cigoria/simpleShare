@@ -147,13 +147,14 @@ router.get("/delete/:code",async(req:Request,res:Response)=>{
   if (!req.headers.authorization){return res.sendStatus(401)}
   let user_permission:auth.PermissionResponse = await auth.validateUserToken(req.headers.authorization,null);
   let code=req.params.code
+  let deleteSubItems = req.query.deleteSubItems === 'true'
   if (user_permission.level === "none"){return res.sendStatus(401)}
   let delete_result:Number=2;
   if (user_permission.level === "admin"){
-    delete_result = await uploadActions.deleteItem(code,false)
+    delete_result = await uploadActions.deleteItem(code,deleteSubItems)
   }
   if (user_permission.level === "user"){
-    delete_result = await uploadActions.deleteItem(code,false,req.headers.authorization)
+    delete_result = await uploadActions.deleteItem(code,deleteSubItems,req.headers.authorization)
   }
   switch(delete_result){
     case(0):return res.sendStatus(200);break;

@@ -159,12 +159,15 @@ export default {
     const handleUploadSuccess = () => {
     }
 
-    const handleDeleteFile = async (code) => {
-      const result = await deleteFileFunc(code, sessionToken.value)
+    const handleDeleteFile = async (code, action = null) => {
+      // For groups, action will be 'confirm' (delete group only) or 'secondary' (delete group and files)
+      // For files, action will be null
+      const deleteSubItems = action === 'secondary'
+      const result = await deleteFileFunc(code, sessionToken.value, deleteSubItems)
       if (result.success) {
         await updateFilesDisplay(sessionToken.value)
         await updateQuotaDisplay(sessionToken.value)
-        showNotification('File deleted successfully!', 'ok')
+        showNotification('Item deleted successfully!', 'ok')
       } else {
         showNotification('Delete failed!', 'error')
       }
