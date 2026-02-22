@@ -146,7 +146,7 @@ export default {
           console.log('Backend result:', result)
           
           if (result && result.exists) {
-            this.fileInfo.text = result.original_name || result.stored_filename || 'File found'
+            this.fileInfo.text = ""
             this.fileInfo.color = "#5ef78c"
             this.fileInfo.exists = true
             
