@@ -129,4 +129,24 @@ router.post("/upload-group", auth.authenticateUser, uploadActions.prepareGroupUp
   }
 })
 
+router.get("/delete/:code",async(req:Request,res:Response)=>{
+  if (!req.headers.authorization){return res.sendStatus(401)}
+  let user_permission:auth.PermissionResponse = await auth.validateUserToken(req.headers.authorization,null);
+  let code=req.params.code
+  if (user_permission.level === "none"){return res.sendStatus(401)}
+  let delete_result:Number=2;
+  if (user_permission.level === "admin"){
+    delete_result = await uploadActions.deleteItem(code,false)
+  }
+  if (user_permission.level === "user"){
+    delete_result = await uploadActions.deleteItem(code,false,req.headers.authorization)
+  }
+  switch(delete_result){
+    case(0):return res.sendStatus(200);break;
+    case(1):return res.sendStatus(404);break;
+    case(2):return res.sendStatus(500);break;
+    case(3):return res.sendStatus(401);break;
+  }
+})
+
 export default router;

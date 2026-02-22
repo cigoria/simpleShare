@@ -2,8 +2,12 @@ const multer = require("multer");
 const path = require("path")
 import { Request, Response, NextFunction } from 'express';
 import { FileFilterCallback } from "multer";
+import { setSyntheticLeadingComments } from 'typescript';
 require("dotenv").config();
 const pool = require("./db");
+const fs = require("fs").promises
+
+type ItemType = "file" | "group"
 
 async function getTotalStorageUsed():Promise<number | null> {
   try {
@@ -250,4 +254,43 @@ export async function prepareUploadContext(req:Request& Record<string, any>, res
   }
 
   next();
+}
+
+export async function deleteItem(code:string|string[],deleteSubItems:boolean=false,validation:string | null=null):Promise<Number>{
+  try{
+    // Get item and type of it
+    let type:ItemType = "file"
+    let files_result = await pool.query("SELECT * FROM file_index WHERE id=?",[code])
+    console.log(code)
+    if (files_result.length === 0){type="group"}
+    if (type === "group"){
+      let group_results = await pool.query("SELECT * FROM file_groups WHERE id=?",[code])
+      if (group_results.length === 0){console.log("a");return 1;} // An Item with such code does not exist!
+      if(validation!==null && group_results[0].user_id !== validation){return 3} // Unauthorized!
+      if (deleteSubItems){
+        for (let file_code of group_results[0].file_ids){
+          let process_result = await deleteItem(file_code,true,validation)
+          if(process_result===1){continue}
+          if(process_result===2){return 2}
+        }
+      }
+      await pool.query("DELETE FROM file_groups WHERE id = ?", [code]);
+      return 0 // Success
+    } if (type === "file"){
+      if(validation!==null && files_result[0].user_id !== validation){return 3} // Unauthorized!
+      let groups_containing_file = await pool.query("SELECT * FROM file_groups WHERE file_ids LIKE ?",[`%${code}%`])
+      for (let group of groups_containing_file){
+        if(group.file_ids.indexOf(code)>-1){group.file_ids.splice(group.file_ids.indexOf(code),1)}
+        await pool.query("UPDATE file_groups SET file_ids = ? WHERE id = ?",[group.file_ids, group.id]);
+      }
+      try {await fs.unlink(process.env.UPLOAD_PATH + files_result[0].stored_filename);} 
+      catch (err) {
+        console.log("File deletion error:", err);
+        return 2 // Stop process if file deletion faliure
+      }
+      await pool.query("DELETE FROM file_index WHERE id = ?", [code]);
+      return 0 // Success
+    }
+    return 2;
+  } catch(err){console.log(err);return 2}
 }
