@@ -158,6 +158,8 @@
 </template>
 
 <script>
+import { useConfirm } from '../composables/useConfirm.js'
+
 export default {
   name: 'MyFilesModal',
   props: {
@@ -166,6 +168,14 @@ export default {
     token: String
   },
   emits: ['close', 'download', 'delete'],
+  setup() {
+    const { confirmDelete, confirm } = useConfirm()
+    
+    return {
+      confirmDelete,
+      confirm
+    }
+  },
   data() {
     return {
       expandedGroups: new Set()
@@ -197,13 +207,22 @@ export default {
       return `${size.toFixed(1)} ${units[unitIndex]}`
     },
     async handleDelete(code) {
-      if (confirm('Are you sure you want to delete this file?')) {
+      try {
+        await this.confirmDelete('this file')
         const result = await this.$emit('delete', code)
         if (result && result.success) {
           // File deleted successfully, parent will update the files list
         } else {
-          alert('Failed to delete file: ' + (result?.error || 'Unknown error'))
+          await this.confirm('Failed to delete file: ' + (result?.error || 'Unknown error'), {
+            title: 'Error',
+            type: 'error',
+            confirmText: 'OK',
+            cancelText: '',
+            closeOnBackdrop: false
+          })
         }
+      } catch {
+        // User cancelled deletion
       }
     }
   }

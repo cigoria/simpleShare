@@ -12,24 +12,45 @@
         />
       </TransitionGroup>
     </div>
+    
+    <ConfirmModal
+      :visible="confirmState.visible"
+      :title="confirmState.title"
+      :message="confirmState.message"
+      :confirm-text="confirmState.confirmText"
+      :cancel-text="confirmState.cancelText"
+      :confirm-icon="confirmState.confirmIcon"
+      :cancel-icon="confirmState.cancelIcon"
+      :type="confirmState.type"
+      :close-on-backdrop="confirmState.closeOnBackdrop"
+      @confirm="handleConfirm"
+      @cancel="handleCancel"
+    />
   </div>
 </template>
 
 <script>
 import Notification from './components/Notification.vue'
+import ConfirmModal from './components/ConfirmModal.vue'
 import { useNotification } from './composables/useNotification.js'
+import { useConfirm } from './composables/useConfirm.js'
 
 export default {
   name: 'App',
   components: {
-    Notification
+    Notification,
+    ConfirmModal
   },
   setup() {
     const { notifications, removeNotification } = useNotification()
+    const { confirmState, handleConfirm, handleCancel } = useConfirm()
     
     return {
       notifications,
-      removeNotification
+      removeNotification,
+      confirmState,
+      handleConfirm,
+      handleCancel
     }
   }
 }

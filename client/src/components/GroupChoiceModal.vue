@@ -56,12 +56,21 @@
 </template>
 
 <script>
+import { useConfirm } from '../composables/useConfirm.js'
+
 export default {
   name: 'GroupChoiceModal',
   props: {
     visible: Boolean
   },
   emits: ['close', 'create-group', 'upload-individually'],
+  setup() {
+    const { confirmWarning } = useConfirm()
+    
+    return {
+      confirmWarning
+    }
+  },
   data() {
     return {
       showGroupInput: false,
@@ -69,13 +78,17 @@ export default {
     }
   },
   methods: {
-    showGroupNameInput() {
+    async showGroupNameInput() {
       this.showGroupInput = true
     },
     
-    confirmGroup() {
+    async confirmGroup() {
       if (!this.groupName.trim()) {
-        alert('Please enter a group name')
+        try {
+          await this.confirmWarning('Please enter a group name')
+        } catch {
+          // User cancelled, do nothing
+        }
         return
       }
       
