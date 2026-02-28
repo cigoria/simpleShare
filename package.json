@@ -1,10 +1,40 @@
 {
+  "name": "simpleshare",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm run build && concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd client && vite",
+    "dev:backend": "cd backend && tsc && cd .. && nodemon dist/server.js",
+    "start": "node dist/server.js",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:backend": "cd backend && tsc",
+    "build:frontend": "cd client && vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist"
+  },
   "dependencies": {
+    "@types/archiver": "^7.0.0",
+    "archiver": "^7.0.1",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "mariadb": "^3.4.5",
     "multer": "^2.0.2",
-    "npm": "^11.7.0"
+    "tailwindcss": "^4.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vue": "^3.5.28",
+    "vue-router": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^1.4.13",
+    "@types/node": "^22.10.5",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.7",
+    "prettier": "^3.8.1",
+    "vite": "^7.3.1"
   }
 }

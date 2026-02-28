@@ -1,0 +1,26 @@
+# robots.txt for simpleShare project
+# Generated based on project structure and security considerations
+
+# Block access to sensitive areas
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /files/
+Disallow: /uploads/
+Disallow: /login
+Disallow: /logout
+Disallow: /verifySession
+
+# Block access to development and system files
+Disallow: /dist/
+Disallow: /node_modules/
+Disallow: /.env
+Disallow: /.git/
+Disallow: /*.log
+Disallow: /*.tmp
+
+# Allow access to public frontend routes
+Allow: /
+
+# Crawl delay (optional - adjust based on server capacity)
+Crawl-delay: 1
