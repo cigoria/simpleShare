@@ -472,6 +472,7 @@ export default {
     },
 
     handleDrop(event) {
+      event._handledByUploadModal = true;
       this.isDragOver = false;
       event.target.style.transform = "";
       event.target.style.backgroundColor = "";
@@ -551,7 +552,7 @@ export default {
         this.$emit("upload-success");
 
         // Reset upload type and group name after successful upload
-        this.uploadType = "individual";
+        this.uploadType = null;
         this.groupName = "";
         this.lastUploadedFiles = null;
         this.lastUploadConfig = null;
@@ -668,7 +669,7 @@ export default {
       this.uploadResult = null;
       this.lastUploadedFiles = null;
       this.lastUploadConfig = null;
-      this.uploadType = "individual";
+      this.uploadType = null;
       this.groupName = "";
       this.uploadProgress = {
         percentage: 0,

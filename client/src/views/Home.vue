@@ -18,6 +18,7 @@
     />
 
     <UploadModal
+      ref="uploadModalRef"
       :visible="showUploadModal"
       :token="sessionToken"
       @close="showUploadModal = false"
@@ -76,11 +77,43 @@
       @close="showRegisterModal = false"
       @register="handleRegisterUser"
     />
+
+    <!-- Full-page Drag & Drop Overlay -->
+    <div
+      v-if="isDragActive && !showUploadModal"
+      class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-6 pointer-events-none animate-fade-in"
+    >
+      <div
+        class="w-full h-full border-4 border-dashed border-primary-button/80 rounded-[28px] flex flex-col items-center justify-center p-8 bg-primary-button/10 text-center shadow-[inset_0_0_60px_rgba(103,146,255,0.15)] transition-all duration-300"
+      >
+        <div
+          class="w-24 h-24 mobile:w-16 mobile:h-16 mb-6 mobile:mb-4 rounded-full bg-primary-button/20 flex items-center justify-center animate-bounce-gentle"
+        >
+          <span
+            class="material-icons-outlined text-6xl mobile:text-4xl text-primary-button"
+            >cloud_upload</span
+          >
+        </div>
+        <h2
+          class="text-3xl mobile:text-2xl font-inter font-bold text-white mb-3"
+        >
+          <span style="color: #5ef78c">Drop</span> files anywhere to
+          <span style="color: #4c73f0">Upload</span>
+        </h2>
+        <p class="text-gray-300 font-inter text-lg mobile:text-sm max-w-md">
+          {{
+            isAuthenticated
+              ? "Release files anywhere to start uploading"
+              : "Please log in to upload files"
+          }}
+        </p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { useAuth } from "../composables/useAuth.js";
 import { useFiles } from "../composables/useFiles.js";
 import { useNotification } from "../composables/useNotification.js";
@@ -144,6 +177,106 @@ export default {
 
     const links = ref([]);
 
+    const isDragActive = ref(false);
+    const uploadModalRef = ref(null);
+    let dragCounter = 0;
+
+    const isFileDrag = (event) => {
+      if (!event.dataTransfer || !event.dataTransfer.types) return false;
+      return (
+        Array.from(event.dataTransfer.types).includes("Files") ||
+        event.dataTransfer.types.includes("application/x-moz-file")
+      );
+    };
+
+    const handleGlobalDragEnter = (event) => {
+      if (showUploadModal.value) return;
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      dragCounter++;
+      isDragActive.value = true;
+    };
+
+    const handleGlobalDragOver = (event) => {
+      if (showUploadModal.value) return;
+      if (!isFileDrag(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
+      }
+    };
+
+    const handleGlobalDragLeave = (event) => {
+      if (!isFileDrag(event)) return;
+      if (showUploadModal.value) {
+        dragCounter = 0;
+        isDragActive.value = false;
+        return;
+      }
+      event.preventDefault();
+      dragCounter--;
+      if (
+        dragCounter <= 0 ||
+        event.clientX <= 0 ||
+        event.clientY <= 0 ||
+        event.clientX >= window.innerWidth ||
+        event.clientY >= window.innerHeight
+      ) {
+        dragCounter = 0;
+        isDragActive.value = false;
+      }
+    };
+
+    const handleGlobalDrop = async (event) => {
+      if (!isFileDrag(event)) return;
+      dragCounter = 0;
+      isDragActive.value = false;
+
+      // If user is already in UploadModal, UploadModal handles the drop directly
+      if (showUploadModal.value) return;
+
+      event.preventDefault();
+      if (event._handledByUploadModal) return;
+
+      const files = event.dataTransfer?.files;
+      if (!files || files.length === 0) return;
+
+      if (!isAuthenticated.value) {
+        showNotification("Please log in to upload files", "error");
+        showLoginModal.value = true;
+        return;
+      }
+
+      if (uploadModalRef.value && uploadModalRef.value.uploading) {
+        showNotification("An upload is already in progress!", "error");
+        return;
+      }
+
+      showHamburgerMenu.value = false;
+      showMyFilesModal.value = false;
+      showMyLinksModal.value = false;
+
+      showUploadModal.value = true;
+      await nextTick();
+      if (uploadModalRef.value) {
+        uploadModalRef.value.handleFiles(files);
+      }
+    };
+
+    watch(showUploadModal, (isOpen) => {
+      if (isOpen) {
+        dragCounter = 0;
+        isDragActive.value = false;
+      }
+    });
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && isDragActive.value) {
+        dragCounter = 0;
+        isDragActive.value = false;
+      }
+    };
+
     const fetchUserLinks = async (token) => {
       try {
         const response = await fetch("/share-link", {
@@ -166,12 +299,26 @@ export default {
     };
 
     onMounted(async () => {
+      window.addEventListener("dragenter", handleGlobalDragEnter);
+      window.addEventListener("dragover", handleGlobalDragOver);
+      window.addEventListener("dragleave", handleGlobalDragLeave);
+      window.addEventListener("drop", handleGlobalDrop);
+      window.addEventListener("keydown", handleKeyDown);
+
       await verifyAccessToken();
       if (isAuthenticated.value) {
         await updateQuotaDisplay(sessionToken.value);
         await updateFilesDisplay(sessionToken.value);
         await fetchUserLinks(sessionToken.value);
       }
+    });
+
+    onUnmounted(() => {
+      window.removeEventListener("dragenter", handleGlobalDragEnter);
+      window.removeEventListener("dragover", handleGlobalDragOver);
+      window.removeEventListener("dragleave", handleGlobalDragLeave);
+      window.removeEventListener("drop", handleGlobalDrop);
+      window.removeEventListener("keydown", handleKeyDown);
     });
 
     const handleLogin = async (username, password, callback) => {
@@ -451,6 +598,10 @@ export default {
       checkFileExists,
       downloadFile,
       downloadGroup,
+
+      // Drag and drop
+      isDragActive,
+      uploadModalRef,
     };
   },
 };

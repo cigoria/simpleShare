@@ -35,6 +35,7 @@
 
 <script>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useAuth } from "../composables/useAuth.js";
 import { useAdmin } from "../composables/useAdmin.js";
 import { useNotification } from "../composables/useNotification.js";
@@ -58,6 +59,7 @@ export default {
     DatabaseView,
   },
   setup() {
+    const router = useRouter();
     const { sessionToken } = useAuth();
     const { verifyAdminAccess } = useAdmin();
     const { showNotification } = useNotification();
@@ -78,7 +80,11 @@ export default {
 
       if (!token) {
         showNotification("Access denied: No token provided", "error");
-        window.location.href = "/";
+        if (router) {
+          router.push("/");
+        } else {
+          window.location.href = "/";
+        }
         return;
       }
 
@@ -95,7 +101,11 @@ export default {
       const isAdmin = await verifyAdminAccess(token);
       if (!isAdmin) {
         showNotification("Access denied: Admin privileges required", "error");
-        window.location.href = "/";
+        if (router) {
+          router.push("/");
+        } else {
+          window.location.href = "/";
+        }
         return;
       }
     });

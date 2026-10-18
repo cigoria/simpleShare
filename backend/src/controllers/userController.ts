@@ -28,6 +28,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   const token = extractToken(req);
+  res.clearCookie("session_token");
   if (!token) { return res.status(400) }
   let logout_result = await auth.logoutUser(token);
   if (logout_result) { return res.sendStatus(200) }
@@ -38,7 +39,15 @@ export const verifySession = async (req: Request, res: Response) => {
   const token = extractToken(req);
   if (!token) { return res.status(401) }
   let user_permission = await auth.validateUserToken(token, null);
-  if (user_permission.level !== "none") { return res.status(200).json({ permission: user_permission.level }) }
+  if (user_permission.level !== "none") {
+    res.cookie("session_token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 90
+    });
+    return res.status(200).json({ permission: user_permission.level });
+  }
   else { return res.status(401).json({ permission: user_permission.level }) }
 };
 
