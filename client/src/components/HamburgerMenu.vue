@@ -92,7 +92,11 @@ export default {
         console.error("No token found in localStorage");
         return;
       }
-      window.location.href = "/admin";
+      if (this.$router) {
+        this.$router.push("/admin");
+      } else {
+        window.location.href = "/admin";
+      }
     },
 
     async handleLogout() {
