@@ -13,11 +13,12 @@
           Upload Multiple Files
         </h3>
         <p class="text-gray-300 mb-6 mobile:mb-4">
-          You selected multiple files. Would you like to create a group?
+          {{ initialGroupName ? `Folder "${initialGroupName}" detected. Would you like to create a group?` : 'You selected multiple files. Would you like to create a group?' }}
         </p>
 
         <div class="space-y-4 mobile:space-y-3">
           <button
+            v-if="!showGroupInput"
             @click="showGroupNameInput"
             class="w-full bg-primary-button text-black px-6 py-3 mobile:py-2 rounded-lg font-medium hover:scale-105 transition-transform"
           >
@@ -27,10 +28,12 @@
 
           <div v-if="showGroupInput" class="space-y-4 mobile:space-y-3">
             <input
+              ref="groupNameInput"
               v-model="groupName"
               type="text"
               placeholder="Enter group name..."
               class="w-full px-4 py-2 mobile:py-1 bg-black/20 border border-[#444] rounded-lg text-white placeholder-gray-400 text-sm mobile:text-xs focus:outline-none focus:border-primary-button transition-colors"
+              @keyup.enter="confirmGroup"
             />
             <button
               @click="confirmGroup"
@@ -69,6 +72,10 @@ export default {
   name: "GroupChoiceModal",
   props: {
     visible: Boolean,
+    initialGroupName: {
+      type: String,
+      default: "",
+    },
   },
   emits: ["close", "create-group", "upload-individually"],
   setup() {
@@ -87,6 +94,9 @@ export default {
   methods: {
     async showGroupNameInput() {
       this.showGroupInput = true;
+      this.$nextTick(() => {
+        this.$refs.groupNameInput?.focus();
+      });
     },
 
     async confirmGroup() {
@@ -115,7 +125,15 @@ export default {
   },
   watch: {
     visible(newVal) {
-      if (!newVal) {
+      if (newVal) {
+        if (this.initialGroupName) {
+          this.groupName = this.initialGroupName;
+          this.showGroupInput = true;
+          this.$nextTick(() => {
+            this.$refs.groupNameInput?.focus();
+          });
+        }
+      } else {
         this.resetModal();
       }
     },
