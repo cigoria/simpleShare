@@ -75,7 +75,7 @@
                       Created
                     </th>
                     <th
-                      class="px-2 mobile:px-1 py-2 mobile:py-1 text-center border-b border-[#444] w-[80px] mobile:w-[60px] text-sm mobile:text-xs"
+                      class="px-2 mobile:px-1 py-2 mobile:py-1 text-center border-b border-[#444] w-[170px] mobile:w-[150px] text-sm mobile:text-xs"
                     >
                       Actions
                     </th>
@@ -138,6 +138,13 @@
                           <span class="material-icons-outlined text-lg">content_copy</span>
                         </button>
                         <button
+                          class="qr-button bg-blue-600/80 text-white p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center"
+                          @click="showQR(link.id, link.url)"
+                          title="Show QR Code"
+                        >
+                          <span class="material-icons-outlined text-lg">qr_code</span>
+                        </button>
+                        <button
                           class="open-button bg-primary-button text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center"
                           @click="openLink(link.url)"
                           title="Open link"
@@ -167,14 +174,26 @@
         </div>
       </div>
     </div>
+
+    <!-- QR Code Modal -->
+    <QrCodeModal
+      :visible="showQrModal"
+      :url="qrUrl"
+      :label="qrLabel"
+      @close="showQrModal = false"
+    />
   </div>
 </template>
 
 <script>
 import { useConfirm } from "../composables/useConfirm.js";
+import QrCodeModal from "./QrCodeModal.vue";
 
 export default {
   name: "MyLinksModal",
+  components: {
+    QrCodeModal,
+  },
   props: {
     visible: Boolean,
     links: Array,
@@ -193,6 +212,9 @@ export default {
     return {
       showCopyIcon: {},
       selectedItems: new Set(),
+      showQrModal: false,
+      qrUrl: "",
+      qrLabel: "",
     };
   },
   computed: {
@@ -201,6 +223,11 @@ export default {
     },
   },
   methods: {
+    showQR(id, targetUrl) {
+      this.qrUrl = `${window.location.origin}/${id}`;
+      this.qrLabel = id;
+      this.showQrModal = true;
+    },
     formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleDateString("hu-HU", {

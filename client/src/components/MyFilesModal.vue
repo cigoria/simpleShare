@@ -99,7 +99,7 @@
                       Size
                     </th>
                     <th
-                      class="px-2 mobile:px-1 py-2 mobile:py-1 text-center border-b border-[#444] w-[80px] mobile:w-[60px] text-sm mobile:text-xs"
+                      class="px-2 mobile:px-1 py-2 mobile:py-1 text-center border-b border-[#444] w-[130px] mobile:w-[110px] text-sm mobile:text-xs"
                     >
                       Actions
                     </th>
@@ -215,6 +215,13 @@
                             >
                           </button>
                           <button
+                            class="qr-button bg-blue-600/80 text-white p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center"
+                            @click.stop="showQR(item.code, item.name)"
+                            title="Show QR Code"
+                          >
+                            <span class="material-icons-outlined text-lg">qr_code</span>
+                          </button>
+                          <button
                             class="delete-button bg-error text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center"
                             @click.stop="handleDelete(item.code)"
                             title="Delete"
@@ -317,6 +324,13 @@
                               >
                             </button>
                             <button
+                              class="qr-button bg-blue-600/80 text-white p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center"
+                              @click.stop="showQR(file.code, file.original_name || file.name)"
+                              title="Show QR Code"
+                            >
+                              <span class="material-icons-outlined text-lg">qr_code</span>
+                            </button>
+                            <button
                               class="delete-button bg-error text-black p-2 rounded-lg hover:opacity-80 transition-opacity w-10 h-10 flex items-center justify-center"
                               @click.stop="handleDelete(file.code)"
                               title="Delete"
@@ -387,14 +401,26 @@
         </div>
       </div>
     </div>
+
+    <!-- QR Code Modal -->
+    <QrCodeModal
+      :visible="showQrModal"
+      :url="qrUrl"
+      :label="qrLabel"
+      @close="showQrModal = false"
+    />
   </div>
 </template>
 
 <script>
 import { useConfirm } from "../composables/useConfirm.js";
+import QrCodeModal from "./QrCodeModal.vue";
 
 export default {
   name: "MyFilesModal",
+  components: {
+    QrCodeModal,
+  },
   props: {
     visible: Boolean,
     files: Array,
@@ -418,6 +444,9 @@ export default {
       showGroupModal: false,
       newGroupName: "",
       isCreatingGroup: false,
+      showQrModal: false,
+      qrUrl: "",
+      qrLabel: "",
     };
   },
   computed: {
@@ -427,6 +456,11 @@ export default {
     },
   },
   methods: {
+    showQR(code, name) {
+      this.qrUrl = `${window.location.origin}/files/${code}`;
+      this.qrLabel = name || code;
+      this.showQrModal = true;
+    },
     fixFilename(filename) {
       if (!filename) return filename;
 
