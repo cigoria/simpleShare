@@ -2,7 +2,7 @@
   <div
     v-if="visible"
     class="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in"
-    @click.self="$emit('close')"
+    @click.self.stop="$emit('close')"
   >
     <div
       class="bg-black/80 backdrop-blur-[20px] border border-[#a1a1a1] rounded-[24px] p-8 mobile:p-6 w-[380px] mobile:w-[92vw] flex flex-col items-center gap-5 animate-scale-in relative shadow-2xl"
