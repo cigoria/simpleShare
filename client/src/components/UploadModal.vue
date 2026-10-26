@@ -387,7 +387,7 @@
   <!-- Group Choice Modal -->
   <GroupChoiceModal
     :visible="showGroupChoiceModal"
-    :initial-group-name="suggestedGroupName"
+    @close="showGroupChoiceModal = false; pendingFiles = null; groupName = ''; suggestedGroupName = ''"
     @close="showGroupChoiceModal = false"
     @create-group="handleCreateGroup"
     @upload-individually="handleUploadIndividually"
