@@ -217,7 +217,9 @@ export function useFiles() {
 
       if (isGroupUpload && files.length > 0) {
         for (let i = 0; i < files.length; i++) {
-          formData.append("files", files[i]);
+          const file = files[i];
+          const filename = file.relativePath || file.name;
+          formData.append("files", file, filename);
         }
         formData.append("groupName", groupName);
         formData.append("createGroup", "true");
@@ -225,14 +227,17 @@ export function useFiles() {
       } else if (files.length > 1) {
         // Multiple files uploaded individually - use new endpoint
         for (let i = 0; i < files.length; i++) {
-          formData.append("files", files[i]);
+          const file = files[i];
+          const filename = file.relativePath || file.name;
+          formData.append("files", file, filename);
         }
         endpoint = "/upload-multiple-individual";
         isMultipleIndividualUpload = true;
       } else {
         // Single file upload
         const file = files[0];
-        formData.append("file", file);
+        const filename = file.relativePath || file.name;
+        formData.append("file", file, filename);
       }
 
       const xhr = new XMLHttpRequest();

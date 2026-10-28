@@ -55,12 +55,20 @@ export async function calculateRemainFromQuota(user_id: string): Promise<number 
   } catch (err) { console.log(err); return 1 }
 }
 
+export function sanitizeRelativePath(input: string): string {
+  let normalized = Buffer.from(input, "latin1").toString("utf8").normalize("NFC");
+  normalized = normalized.replace(/\\/g, "/");
+  const parts = normalized.split("/").filter(p => p !== ".." && p !== "." && p.length > 0);
+  return parts.length > 0 ? parts.join("/") : "file";
+}
+
 export async function registerUploadInIndex(req: Request & Record<string, any>) {
   try {
     if (!req.file) throw new Error("No file uploaded");
 
+    let fixed_filename = sanitizeRelativePath(req.file.originalname);
     // Rename the file to use the file code
-    const ext = path.extname(req.file.originalname);
+    const ext = path.extname(fixed_filename);
     const newFilename = `${req.fileCode}${ext}`;
 
     // Rename the file on disk
@@ -71,7 +79,6 @@ export async function registerUploadInIndex(req: Request & Record<string, any>) 
     if (fs.existsSync(oldPath)) {
       fs.renameSync(oldPath, newPath);
     }
-    let fixed_filename = Buffer.from(req.file.originalname, "latin1").toString("utf8").normalize("NFC");
     let res = await prisma.file_index.create({ data: { id: req.fileCode, mime_type: req.file.mimetype, stored_filename: newFilename, original_name: fixed_filename, file_size_in_bytes: req.file.size, user_id: req.user.id } })
 
     return !!res;
@@ -191,7 +198,7 @@ export async function registerGroupUploadInIndex(req: Request & Record<string, a
       if (fileCode === undefined) { throw new Error("For some reason the file code is undefined????" + fileCode) }
       fileIds.push(fileCode);
 
-      let fixed_filename = Buffer.from(file.originalname, "latin1").toString("utf8").normalize("NFC");
+      let fixed_filename = sanitizeRelativePath(file.originalname);
 
       // Update the filename to include the file code
       const ext = path.extname(fixed_filename);
@@ -268,7 +275,7 @@ export async function registerMultipleIndividualUploadsInIndex(req: Request & Re
     for (const file of req.files as Express.Multer.File[]) {
       const fileCode: string | undefined = await generateUniqueCode(6);
       if (fileCode === undefined) { throw new Error("For some reason the file code is undefined????" + fileCode) }
-      let fixed_filename = Buffer.from(file.originalname, "latin1").toString("utf8").normalize("NFC");
+      let fixed_filename = sanitizeRelativePath(file.originalname);
 
       // Update the filename to include the file code
       const ext = path.extname(fixed_filename);

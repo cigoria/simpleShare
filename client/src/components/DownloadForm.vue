@@ -125,6 +125,16 @@ export default {
     },
 
     handlePaste(event, index) {
+      const hasFiles =
+        (event.clipboardData?.files && event.clipboardData.files.length > 0) ||
+        Array.from(event.clipboardData?.items || []).some(
+          (item) => item.kind === "file",
+        );
+      if (hasFiles) {
+        // Allow global paste listener to handle file/image upload
+        return;
+      }
+
       event.preventDefault();
       const pastedData = event.clipboardData
         .getData("text")

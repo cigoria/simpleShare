@@ -25,8 +25,9 @@
         @drop.prevent="handleDrop"
       >
         <p class="text-center mobile:text-sm">
-          <span style="color: #5ef78c">Drop</span> or
-          <span style="color: #4c73f0">Select</span> files here
+          <span style="color: #5ef78c">Drop</span> files or folders,
+          <span style="color: #f7bb5e">Paste</span> (Ctrl+V) or
+          <span style="color: #4c73f0">Select</span> here
         </p>
       </div>
 
@@ -386,7 +387,7 @@
   <!-- Group Choice Modal -->
   <GroupChoiceModal
     :visible="showGroupChoiceModal"
-    @close="showGroupChoiceModal = false"
+    @close="showGroupChoiceModal = false; pendingFiles = null; groupName = ''; suggestedGroupName = ''"
     @create-group="handleCreateGroup"
     @upload-individually="handleUploadIndividually"
   />
@@ -394,6 +395,10 @@
 
 <script>
 import GroupChoiceModal from "./GroupChoiceModal.vue";
+import {
+  extractFilesFromDataTransfer,
+  extractFilesFromClipboard,
+} from "../utils/fileHelpers.js";
 
 export default {
   name: "UploadModal",
@@ -418,6 +423,7 @@ export default {
       pendingFiles: null,
       uploadType: null, // 'individual', 'group', or null
       groupName: "",
+      suggestedGroupName: "",
       uploadProgress: {
         percentage: 0,
         speed: "0",
@@ -471,21 +477,29 @@ export default {
       event.target.style.backgroundColor = "";
     },
 
-    handleDrop(event) {
+    async handleDrop(event) {
       event._handledByUploadModal = true;
       this.isDragOver = false;
       event.target.style.transform = "";
       event.target.style.backgroundColor = "";
-      const files = event.dataTransfer.files;
-      this.handleFiles(files);
+      const { files, folderName } = await extractFilesFromDataTransfer(
+        event.dataTransfer,
+      );
+      if (files && files.length > 0) {
+        this.handleFiles(files, folderName);
+      }
     },
 
-    async handleFiles(files) {
+    async handleFiles(files, folderName = null) {
+      if (!files || files.length === 0) return;
 
-      if (files.length === 0) return;
+      if (folderName) {
+        this.suggestedGroupName = folderName;
+        this.groupName = folderName;
+      }
 
-      // If multiple files selected and no upload choice made, show group choice modal
-      if (files.length > 1 && !this.uploadType) {
+      // If multiple files selected or folder dropped, and no upload choice made, show group choice modal
+      if ((files.length > 1 || folderName) && !this.uploadType) {
         this.pendingFiles = files;
         this.showGroupChoiceModal = true;
         return;
@@ -554,6 +568,7 @@ export default {
         // Reset upload type and group name after successful upload
         this.uploadType = null;
         this.groupName = "";
+        this.suggestedGroupName = "";
         this.lastUploadedFiles = null;
         this.lastUploadConfig = null;
       } catch (error) {
@@ -671,6 +686,7 @@ export default {
       this.lastUploadConfig = null;
       this.uploadType = null;
       this.groupName = "";
+      this.suggestedGroupName = "";
       this.uploadProgress = {
         percentage: 0,
         speed: "0",
@@ -678,6 +694,48 @@ export default {
         total: "0 MB",
       };
     },
+
+    handlePaste(event) {
+      if (!this.visible || this.uploading || this.uploadComplete) return;
+
+      // Don't intercept paste if user is typing in a text input or textarea
+      const target = event.target;
+      const isInput =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      const files = extractFilesFromClipboard(event.clipboardData);
+      if (files && files.length > 0) {
+        event.preventDefault();
+        this.handleFiles(files);
+        return;
+      }
+
+      if (isInput) return;
+
+      // If user pasted text into the drop zone, convert it to a text file
+      const text = event.clipboardData?.getData("text/plain");
+      if (text && text.trim().length > 0) {
+        event.preventDefault();
+        const timestamp = new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace(/[:T]/g, "-");
+        const textFile = new File([text], `clipboard_${timestamp}.txt`, {
+          type: "text/plain",
+          lastModified: Date.now(),
+        });
+        this.handleFiles([textFile]);
+      }
+    },
+  },
+  mounted() {
+    window.addEventListener("paste", this.handlePaste);
+  },
+  beforeUnmount() {
+    window.removeEventListener("paste", this.handlePaste);
   },
   watch: {
     visible(newVal) {
@@ -693,6 +751,7 @@ export default {
         this.pendingFiles = null;
         this.uploadType = null; // Reset to null to allow group choice
         this.groupName = "";
+        this.suggestedGroupName = "";
         this.lastUploadedFiles = null;
         this.lastUploadConfig = null;
         this.uploadProgress = {

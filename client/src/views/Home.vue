@@ -97,13 +97,13 @@
         <h2
           class="text-3xl mobile:text-2xl font-inter font-bold text-white mb-3"
         >
-          <span style="color: #5ef78c">Drop</span> files anywhere to
+          <span style="color: #5ef78c">Drop</span> files or folders anywhere to
           <span style="color: #4c73f0">Upload</span>
         </h2>
         <p class="text-gray-300 font-inter text-lg mobile:text-sm max-w-md">
           {{
             isAuthenticated
-              ? "Release files anywhere to start uploading"
+              ? "Release files or folders anywhere to start uploading"
               : "Please log in to upload files"
           }}
         </p>
@@ -127,6 +127,10 @@ import ChangePasswordModal from "../components/ChangePasswordModal.vue";
 import LinkShareModal from "../components/LinkShareModal.vue";
 import MyLinksModal from "../components/MyLinksModal.vue";
 import RegisterUserModal from "../components/RegisterUserModal.vue";
+import {
+  extractFilesFromDataTransfer,
+  extractFilesFromClipboard,
+} from "../utils/fileHelpers.js";
 
 export default {
   name: "Home",
@@ -238,8 +242,51 @@ export default {
       event.preventDefault();
       if (event._handledByUploadModal) return;
 
-      const files = event.dataTransfer?.files;
+      const { files, folderName } = await extractFilesFromDataTransfer(
+        event.dataTransfer,
+      );
       if (!files || files.length === 0) return;
+
+      if (!isAuthenticated.value) {
+        showNotification("Please log in to upload files", "error");
+        showLoginModal.value = true;
+        return;
+      }
+
+      if (uploadModalRef.value && uploadModalRef.value.uploading) {
+        showNotification("An upload is already in progress!", "error");
+        return;
+      }
+
+      showHamburgerMenu.value = false;
+      showMyFilesModal.value = false;
+      showMyLinksModal.value = false;
+
+      showUploadModal.value = true;
+      await nextTick();
+      if (uploadModalRef.value) {
+        uploadModalRef.value.handleFiles(files, folderName);
+      }
+    };
+
+    const handleGlobalPaste = async (event) => {
+      // If user is already in UploadModal, UploadModal handles the paste directly
+      if (showUploadModal.value) return;
+
+      // Don't intercept paste if user is typing in a text input or textarea
+      const target = event.target;
+      const isInput =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      const files = extractFilesFromClipboard(event.clipboardData);
+      if (!files || files.length === 0) return;
+
+      if (isInput) return;
+
+      event.preventDefault();
 
       if (!isAuthenticated.value) {
         showNotification("Please log in to upload files", "error");
@@ -304,6 +351,7 @@ export default {
       window.addEventListener("dragleave", handleGlobalDragLeave);
       window.addEventListener("drop", handleGlobalDrop);
       window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("paste", handleGlobalPaste);
 
       await verifyAccessToken();
       if (isAuthenticated.value) {
@@ -319,6 +367,7 @@ export default {
       window.removeEventListener("dragleave", handleGlobalDragLeave);
       window.removeEventListener("drop", handleGlobalDrop);
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("paste", handleGlobalPaste);
     });
 
     const handleLogin = async (username, password, callback) => {
