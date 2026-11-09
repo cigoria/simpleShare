@@ -45,7 +45,6 @@ export default {
         { id: "links", label: "Links" },
         { id: "stats", label: "Stats" },
         { id: "storage", label: "Storage" },
-        { id: "database", label: "DB" },
       ],
     };
   },
