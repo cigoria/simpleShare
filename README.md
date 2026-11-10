@@ -59,9 +59,6 @@ The application features a clean, modern interface with intuitive navigation:
 ### Users Menu (Admin)
 ![Users Menu](images/Users-menu.png)
 
-### Database Menu (Admin)
-![DB Menu](images/DB-menu.png)
-
 ## Project Structure
 
 ```
